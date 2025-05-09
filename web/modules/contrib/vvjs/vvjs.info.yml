@@ -6,7 +6,7 @@ package: Views
 dependencies:
   - drupal:views
 
-# Information added by Drupal.org packaging script on 2025-03-30
-version: '1.0.15'
+# Information added by Drupal.org packaging script on 2025-04-13
+version: '1.0.16'
 project: 'vvjs'
-datestamp: 1743363666
+datestamp: 1744523963

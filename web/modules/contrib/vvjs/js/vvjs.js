@@ -179,14 +179,23 @@
           startAutoSlide();
         });
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowRight') nextSlide();
-          else if (e.key === 'ArrowLeft') prevSlide();
-          else if (e.key === ' ') {
+          // Skip handling Spacebar if the focused element is an input,
+          // textarea, or contenteditable.
+          if (
+            e.target.closest('input, textarea, [contenteditable="true"]')
+          ) {
+            return;
+          }
+
+          if (e.key === 'ArrowRight') {
+            nextSlide();
+          } else if (e.key === 'ArrowLeft') {
+            prevSlide();
+          } else if (e.key === ' ') {
             e.preventDefault();
             togglePlayPause();
           }
         });
-
         function handleSlideshowVisibilityChange() {
           if (document.hidden) {
             stopAutoSlide();
