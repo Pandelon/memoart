@@ -1,0 +1,11 @@
+uuid: 91c7bbf4-e5b2-4951-bbf6-fc41acd04bb2
+langcode: hu
+status: true
+dependencies:
+  config:
+    - node.type.ajanlat
+id: node.ajanlat
+target_entity_type_id: node
+target_bundle: ajanlat
+default_langcode: site_default
+language_alterable: false

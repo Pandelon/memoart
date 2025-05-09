@@ -1,0 +1,219 @@
+{#
+/**
+ * @file
+ * Theme override for the basic structure of a single Drupal page.
+ *
+ * Variables:
+ * - logged_in: A flag indicating if user is logged in.
+ * - root_path: The root path of the current page (e.g., node, admin, user).
+ * - node_type: The content type for the current node, if the page is a node.
+ * - head_title: List of text elements that make up the head_title variable.
+ *   May contain one or more of the following:
+ *   - title: The title of the page.
+ *   - name: The name of the site.
+ *   - slogan: The slogan of the site.
+ * - page_top: Initial rendered markup. This should be printed before 'page'.
+ * - page: The rendered page markup.
+ * - page_bottom: Closing rendered markup. This variable should be printed after
+ *   'page'.
+ * - db_offline: A flag indicating if the database is offline.
+ * - placeholder_token: The token for generating head, css, js and js-bottom
+ *   placeholders.
+ *
+ * @see template_preprocess_html()
+ */
+#}
+{%
+  set body_classes = [
+    logged_in ? 'user-logged-in',
+    not root_path ? 'path-frontpage' : 'path-' ~ root_path|clean_class,
+    node_type ? 'page-node-type-' ~ node_type|clean_class,
+    db_offline ? 'db-offline',
+    (b4_body_schema == 'light' ? ' text-dark' : (b4_body_schema == 'dark' ? ' text-light' :  ' ')),
+    (b4_body_bg_schema != 'none' ? " bg-#{b4_body_bg_schema}" : ' '),
+    'd-flex flex-column h-100'
+  ]
+%}
+
+<!DOCTYPE html>
+<html{{ html_attributes.addClass('h-100') }}>
+  <head>
+    <head-placeholder token="{{ placeholder_token }}">
+    <title>{{ head_title|safe_join(' | ') }}</title>
+    <css-placeholder token="{{ placeholder_token }}">
+    <js-placeholder token="{{ placeholder_token }}">
+<script src="/libraries/cookieconsent/cookieconsent.min.js"></script>
+      <script>
+        window.CookieConsent.init({
+          language: {
+            current: 'hu'
+          },
+          categories: {
+            necessary: {
+              needed: true,
+              wanted: true,
+              checked: true,
+              language: {
+                locale: {
+                  en: {
+                    name: 'Strictly Necessary Cookies',
+                    description: 'The must have cookies.',
+                  },
+                  hu: {
+                    name: 'Szükséges sütik',
+                    description: 'Az oldal helyes működéséhez elengedhetetlen sütik.',
+                  }
+                }
+              }
+            },
+            analytics: {
+              needed: false,
+              wanted: false,
+              checked: false,
+              language: {
+                locale: {
+                  en: {
+                    name: 'Analytics',
+                    description:
+                      'Analyse website traffic  through Google service.',
+                  },
+                  hu: {
+                    name: 'Statisztikai sütik',
+                    description: 'Az adatok névtelen formában való gyűjtésén és jelentésén keresztül a statisztikai cookie-k (sütik) segítenek a weboldal tulajdonosának abban, hogy megértse, hogyan lépnek interakcióba a látogatók a weboldallal. A cookiek célja továbbá a weboldal felhasználó általi használatának megismerése (pl. megtekintett oldalak, oldalak száma, navigálás, munkamenet ideje, hibaüzenetek stb) annak érdekében, hogy látogatóink igényeinek megfelelően tudjuk a weboldalt tovább fejleszteni és magas színvonalú, felhasználóbarát élményt tudjunk biztosítani.',
+                  },
+                },
+              },
+            },
+            various: {
+              needed: false,
+              wanted: false,
+              checked: false,
+              language: {
+                locale: {
+                  en: {
+                    name: 'Various Cookies',
+                    description: 'Various third party cookies.',
+                  },
+                  hu: {
+                    name: 'Egyéb sütik',
+                    description: 'Egyéb harmadik féltől származó sütik.',
+                  }
+                }
+              }
+            }
+          },
+          consentModeControls: {
+            ad_storage: 'marketing',
+            ad_user_data: 'marketing',
+            ad_personalization: 'marketing',
+            analytics_storage: 'analytics'
+          },
+          services: {
+            googleAnalytics: {
+              category: 'analytics',
+              type: '',
+              search: '',
+              language: {
+                locale: {
+                  en: {
+                    name: 'Google Analytics (analytics_storage)'
+                  },
+                  hu: {
+                    name: 'Google Analytics (analytics_storage)'
+                  }
+                }
+              }
+            },
+            googleAds: {
+              category: 'marketing',
+              type: '',
+              search: '',
+              language: {
+                locale: {
+                  en: {
+                    name: 'Google Ads (ad_storage, ad_user_data, ad_personalization)'
+                  },
+                  hu: {
+                    name: 'Google Ads (ad_storage, ad_user_data, ad_personalization)'
+                  }
+                }
+              }
+            },
+            facebook: {
+              category: 'various',
+              type: 'dynamic-script', // dynamic-script, script-tag, wrapped, localcookie
+              search: 'facebook',
+              language: {
+                locale: {
+                  en: {
+                    name: 'Facebook'
+                  },
+                  hu: {
+                    name: 'Facebook'
+                  }
+                }
+              }
+            },
+            wrapped: {
+              category: 'various',
+              type: 'wrapped',
+              search: 'wrapped',
+              language: {
+                locale: {
+                  en: {
+                    name: 'Wrapped'
+                  },
+                  hu: {
+                    name: 'Csomagolt süti'
+                  }
+                }
+              }
+            },
+            localcookie: {
+              category: 'various',
+              type: 'localcookie',
+              search: 'localcookie',
+              language: {
+                locale: {
+                  en: {
+                    name: 'Local cookie'
+                  },
+                  hu: {
+                    name: 'Helyi süti'
+                  }
+                }
+              }
+            }
+          }
+        });
+      </script>
+      
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-02E244HR8S"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-02E244HR8S');
+      </script>
+
+  </head>
+  <body{{ attributes.addClass(body_classes) }}>
+
+  <div id="fb-root"></div>
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/hu_HU/sdk.js#xfbml=1&version=v8.0&appId=245491058828870&autoLogAppEvents=1" nonce="cRxBxPkA"></script>
+
+    {#
+      Keyboard navigation/accessibility link to main content section in
+      page.html.twig.
+    #}
+    <a href="#main-content" class="visually-hidden focusable skip-link">
+      {{ 'Skip to main content'|t }}
+    </a>
+    {{ page_top }}
+    {{ page }}
+    {{ page_bottom }}
+    <js-bottom-placeholder token="{{ placeholder_token }}">
+  </body>
+</html>

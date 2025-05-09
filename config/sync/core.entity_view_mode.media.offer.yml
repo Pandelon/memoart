@@ -1,0 +1,11 @@
+uuid: 5b86afe2-12fc-46a0-aeca-375030f749b1
+langcode: hu
+status: true
+dependencies:
+  module:
+    - media
+id: media.offer
+label: offer
+description: ''
+targetEntityType: media
+cache: true

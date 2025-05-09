@@ -1,0 +1,26 @@
+
+name: memofoto
+type: theme
+description: 'Me.Mo. Foto bootstrap 5 subtheme'
+core_version_requirement: '^10.1 || ^11.0'
+base theme: bootstrap5
+
+
+# Libraries.
+libraries:
+  - memo/global-styling
+
+# Regions.
+regions:
+  header: Header
+  nav_branding: 'Navigation branding region'
+  nav_main: 'Main navigation region'
+  nav_additional: 'Additional navigation region (eg search form, social icons, etc)'
+  breadcrumb: Breadcrumbs
+  front_first: 'Front first'
+  front_second: 'Front second'
+  front_third: 'Front third'
+  content: 'Main content'
+  sidebar_first: 'Sidebar first'
+  sidebar_second: 'Sidebar second'
+  footer: Footer

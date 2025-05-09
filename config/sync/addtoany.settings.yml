@@ -1,0 +1,24 @@
+_core:
+  default_config_hash: '-oeXHVXl-m1HE6XR_-FXfNgJOgPuHcOCWSkymfOR7Sc'
+langcode: hu
+buttons_size: 25
+additional_html: "<a class=\"a2a_button_facebook\"></a>\r\n<a class=\"a2a_button_pinterest\"></a>\r\n<a class=\"a2a_button_facebook_messenger\"></a>\r\n"
+additional_css: ''
+additional_js: ''
+universal_button: default
+custom_universal_button: ''
+universal_button_placement: after
+entities:
+  media: 0
+  node: 1
+  comment: 1
+  block_content: 0
+  contact_message: 0
+  file: 0
+  path_alias: 0
+  shortcut: 0
+  taxonomy_term: 0
+  user: 0
+  webform_submission: 0
+  menu_link_content: 0
+no_3p: false

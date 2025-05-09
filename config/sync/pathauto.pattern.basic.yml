@@ -1,0 +1,26 @@
+uuid: 28f0699e-d69e-4e6d-bc6d-cfaa9eaeaf83
+langcode: hu
+status: true
+dependencies:
+  module:
+    - node
+id: basic
+label: pages
+type: 'canonical_entities:node'
+pattern: '[node:title]'
+selection_criteria:
+  1f32ae36-29ed-488b-8c9b-e12288a0390b:
+    id: 'entity_bundle:node'
+    negate: false
+    uuid: 1f32ae36-29ed-488b-8c9b-e12288a0390b
+    context_mapping:
+      node: node
+    bundles:
+      ajanlat: ajanlat
+      article: article
+      galeria: galeria
+      offer: offer
+      page: page
+selection_logic: and
+weight: -5
+relationships: {  }

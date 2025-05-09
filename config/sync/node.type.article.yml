@@ -1,0 +1,20 @@
+uuid: 249379dd-b1d5-4520-adbd-805f23cc3e98
+langcode: hu
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+_core:
+  default_config_hash: AeW1SEDgb1OTQACAWGhzvMknMYAJlcZu0jljfeU3oso
+name: Hír
+type: article
+description: 'A <em>cikk</em> típust az időhöz kötött tartalmakhoz érdemes használni. Például hírek, sajtóközlemények vagy blogbejegyzések.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

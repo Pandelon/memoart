@@ -1,0 +1,24 @@
+uuid: 1dae248d-c83b-4b02-9a60-c6cfc293603f
+langcode: hu
+status: false
+dependencies:
+  config:
+    - views.view.ajanlat_ok_
+  module:
+    - views
+  theme:
+    - memofoto
+id: views_block__ajanlat_ok__block_1
+theme: memofoto
+region: front_first
+weight: 0
+provider: null
+plugin: 'views_block:ajanlat_ok_-block_1'
+settings:
+  id: 'views_block:ajanlat_ok_-block_1'
+  label: ''
+  label_display: '0'
+  provider: views
+  views_label: ''
+  items_per_page: none
+visibility: {  }

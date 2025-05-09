@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: yTxtFqBHnEWxQswuWvkjE8mKw2t8oKuCL1q8KnfHuGE
+langcode: hu
+uuid: 457c93ae-897f-4e37-90fa-f0dc3403205a
+name: 'Me.Mo Foto'
+mail: irjnekem@memofoto.hu
+slogan: ''
+page:
+  403: ''
+  404: ''
+  front: /node
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: hu
+mail_notification: null

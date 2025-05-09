@@ -1,0 +1,12 @@
+uuid: c209a68b-0df5-472b-82c3-6c5d8459590b
+langcode: hu
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 1noCXlegCr5HFehQRF1ViXy1jhU1jZ_sNN99a8Sj5jo
+id: front
+label: 'Front page'
+tags:
+  geo_placename: Göd
+  canonical_url: '[site:url]'
+  shortlink: '[site:url]'

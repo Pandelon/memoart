@@ -1,0 +1,34 @@
+uuid: fb9ef4f2-dd20-478d-ad90-c84c64b420bb
+langcode: hu
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.offer.body
+    - field.field.node.offer.field_media
+    - node.type.offer
+  module:
+    - text
+    - user
+id: node.offer.teaser
+targetEntityType: node
+bundle: offer
+mode: teaser
+content:
+  body:
+    type: text_summary_or_trimmed
+    label: hidden
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  addtoany: true
+  field_media: true
+  langcode: true

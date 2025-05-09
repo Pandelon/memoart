@@ -1,0 +1,310 @@
+@charset "UTF-8";
+@import url("https://fonts.googleapis.com/css2?family=Parisienne&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@1,900&display=swap");
+body {
+  font-size: 15px;
+}
+
+main {
+  background-color: #F6F6F6;
+}
+
+.field--name-field-galeria-kepek {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  grid-gap: 1em;
+}
+
+.field__item {
+  display: block;
+  overflow: hidden;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,102,203, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+}
+
+footer .region-footer {
+  flex-direction: row;
+  color: #fff;
+}
+footer .region-footer > div {
+  width: 33%;
+}
+footer .region-footer > div a {
+  color: #f3b735;
+}
+
+footer {
+  background-color: #343a40;
+}
+footer h2, footer h3 {
+  color: #fff;
+}
+
+#block-memofoto-powered {
+  text-align: right;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.node--type-article .node__links {
+  clear: both;
+}
+
+.front1 .container {
+  background: rgba(255, 255, 255, 0.8);
+  position: relative;
+}
+
+#block-memo-megrendelestelefon .field--name-body {
+  display: flex;
+  justify-content: space-around;
+  background-color: #F6F6F6;
+  margin-top: 1rem;
+}
+
+.front2 {
+  padding: 30px 0;
+}
+.front2 .container {
+  background: rgb(255, 255, 255);
+}
+
+.front3 {
+  background-color: #ffc966;
+}
+.front3 .container {
+  padding: 0 3rem;
+}
+
+@keyframes bg-animation {
+  0% {
+    background-position: left;
+  }
+  50% {
+    background-position: right;
+  }
+  100% {
+    background-position: left;
+  }
+}
+#block-megrendelestelefon,
+#block-megrendelestelefon-2 {
+  margin-bottom: 1em;
+}
+
+/* .view-frontpage {
+  .view-content {
+    display:grid;
+    grid-gap: 1em;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+
+    .views-view-responsive-grid__item {
+      background-color: red;
+      padding: 10px;
+    }
+  }
+} */
+.view-testimonials .views-field-body {
+  padding: 5rem;
+  display: block;
+}
+.view-testimonials h3 {
+  font-family: "Parisienne", cursive;
+  text-align: right;
+  color: darkblue;
+  margin-bottom: 0;
+}
+.view-testimonials .views-field-field-titulus {
+  font-style: italic;
+  color: #373737;
+}
+.view-testimonials .slides li {
+  position: relative;
+  padding: 2rem;
+}
+.view-testimonials .slides li::before {
+  font-family: Georgia, serif;
+  content: "“";
+  position: absolute;
+  top: 0px;
+  left: 20px;
+  font-size: 5em;
+  color: #d6d6d6;
+  font-weight: normal;
+}
+.view-testimonials .slides li::after {
+  font-family: Georgia, serif;
+  content: "”";
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  line-height: 100px;
+  font-size: 25em;
+  color: #d6d6d6;
+  font-weight: normal;
+  z-index: -1;
+}
+.view-testimonials .views-field-field-titulus {
+  float: right;
+}
+
+.view-ajanlat-ok- .views-field-field-media .field-content {
+  display: flex;
+  justify-content: space-between;
+}
+.view-ajanlat-ok- .field--name-field-media-image img {
+  transition: transform 0.4s ease-in-out;
+}
+.view-ajanlat-ok- .field--name-field-media-image img:hover {
+  transform: scale(1.2);
+}
+
+.views-field-field-media li {
+  list-style: none;
+  margin-left: 0;
+}
+
+.field--name-field-media .field__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1%;
+}
+
+#block-views-block-ajanlat-ok-block-1 article {
+  float: left;
+  width: 350px;
+  margin-right: 1em;
+}
+
+/*   masonry    */
+.masonry {
+  display: grid;
+  grid-gap: 1em;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-auto-rows: 0;
+  margin-top: 2rem;
+}
+
+.masonry-brick {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+  background-color: hsl(206, 100%, 99%);
+  overflow: hidden;
+}
+.masonry-brick .field--name-field-media-image {
+  margin-right: -1rem;
+  margin-left: -1rem;
+  overflow: hidden;
+}
+.masonry-brick .field--name-field-media-image img {
+  width: 100%;
+  transition: all 0.5s ease;
+  overflow: hidden;
+}
+.masonry-brick .field--name-field-media-image img:hover {
+  transform: translateZ(0) scale(1.2);
+}
+
+#block-memo-main-navigation .navbar-nav .nav-link {
+  opacity: 1;
+  position: relative;
+  text-transform: uppercase;
+}
+#block-memo-main-navigation .navbar-nav .nav-link:before {
+  content: "";
+  display: block;
+  height: 5px;
+  background: orange;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: scale(0, 1);
+  transition: transform ease-in-out 250ms;
+}
+#block-memo-main-navigation .navbar-nav .nav-link:hover:before {
+  transform: scale(1, 1);
+}
+
+h2 a {
+  color: hsl(39, 100%, 50%);
+  text-decoration: none;
+}
+h2 a:hover {
+  text-decoration: none;
+  color: #996300;
+}
+
+.flex-control-nav {
+  display: none;
+}
+
+.flex-direction-nav a::before {
+  color: hsl(39, 100%, 50%);
+  font-size: 35px;
+}
+
+div#cconsent-bar {
+  background-color: hsl(39, 100%, 50%);
+  color: black;
+}
+
+.region-nav-additional .field--name-body img {
+  margin: 0 0.5rem;
+}
+
+@media only screen and (max-width: 480px) {
+  .navbar-default .navbar-brand {
+    margin-top: 0;
+    height: inherit;
+  }
+  header {
+    position: relative;
+  }
+  .navbar-toggler {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+  .navbar-brand {
+    margin: 0;
+  }
+  .navbar-brand img {
+    height: 180px;
+    margin: 0;
+    width: auto;
+  }
+  #navbar-collapse {
+    position: relative;
+    width: inherit;
+  }
+  #navbar-collapse .menu.nav li {
+    display: block;
+  }
+  .dropdown-menu > li > a {
+    white-space: normal;
+  }
+  .field--name-field-galeria-kepek {
+    display: block;
+  }
+  .field--name-field-galeria-kepek .field__item img {
+    width: 100%;
+  }
+  .field--name-field-media-image {
+    width: 100%;
+  }
+  .view-frontpage .view-content {
+    display: block;
+  }
+}
+@media (min-width: 992px) {
+  .navbar-brand img {
+    height: 100px;
+  }
+}/*# sourceMappingURL=style.css.map */

@@ -1,0 +1,248 @@
+<?php
+
+/**
+ * @file
+ * Provides the module implementation for vvjs.
+ *
+ * Contains template preprocessing and theme definitions for Views.
+ *
+ * Filename:     vvjs.module
+ * Website:      https://www.flashwebcenter.com
+ * Description:  template.
+ * Developer:    Alaa Haddad https://www.alaahaddad.com.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Template\Attribute;
+use Drupal\vvjs\Plugin\views\style\ViewsVanillaJavascriptSlideshow;
+
+/**
+ * Implements hook_help().
+ */
+function vvjs_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name === 'help.page.vvjs') {
+    return _vvjs_helper_render_readme();
+  }
+  return NULL;
+}
+
+/**
+ * Helper function to render README.md.
+ *
+ * @return string
+ *   The rendered content of README.md.
+ */
+function _vvjs_helper_render_readme(): string {
+  $readme_path = __DIR__ . '/README.md';
+  $text = file_get_contents($readme_path);
+
+  if ($text === FALSE) {
+    return t('README.md file not found.');
+  }
+
+  if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
+    return '<pre>' . htmlspecialchars($text) . '</pre>';
+  }
+
+  // Use the Markdown filter to render the README.
+  $filter_manager = \Drupal::service('plugin.manager.filter');
+  $settings = \Drupal::config('markdown.settings')->getRawData();
+  $filter = $filter_manager->createInstance('markdown', ['settings' => $settings]);
+  return $filter->process($text, 'en')->getProcessedText();
+}
+
+/**
+ * Implements hook_theme().
+ */
+function vvjs_theme($existing, $type, $theme, $path) {
+  return [
+    'views_view_vvjs_fields' => [
+      'variables' => [
+        'view' => NULL,
+        'options' => [],
+        'row' => NULL,
+        'field_alias' => NULL,
+        'attributes' => [],
+        'title_attributes' => [],
+        'content_attributes' => [],
+        'title_prefix' => [],
+        'title_suffix' => [],
+        'fields' => [],
+      ],
+      'template' => 'views-view-vvjs-fields',
+      'path' => $path . '/templates',
+    ],
+    'views_view_vvjs' => [
+      'variables' => [
+        'view' => NULL,
+        'rows' => [],
+        'options' => [],
+      ],
+      'template' => 'views-view-vvjs',
+      'path' => $path . '/templates',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views_view_vvjs.
+ */
+function template_preprocess_views_view_vvjs(array &$variables) {
+  // Load necessary views theme functions.
+  \Drupal::moduleHandler()->loadInclude('views', 'inc', 'views.theme');
+
+  // Access the style plugin handler.
+  $handler = $variables['view']->style_plugin;
+
+  // Initialize list attributes array.
+  $list_attributes = [];
+
+  // Add options as data attributes.
+  if (!empty($handler->options['animation'])) {
+    $list_attributes['data-animation'] = $handler->options['animation'];
+  }
+
+  if (!empty($handler->options['navigation'])) {
+    $list_attributes['data-navigation'] = $handler->options['navigation'];
+  }
+
+  if (!empty($handler->options['time_in_seconds'])) {
+    $list_attributes['data-time-in-seconds'] = $handler->options['time_in_seconds'];
+  }
+
+  if (!empty($handler->options['arrows'])) {
+    $list_attributes['data-arrows'] = $handler->options['arrows'];
+  }
+
+  // Unique ID for the slideshow instance.
+  if (!empty($handler->options['unique_id'])) {
+    $list_attributes['data-unique-id'] = $handler->options['unique_id'];
+  }
+
+  // Calculate and pass the background_rgb variable to the template.
+  if (!empty($handler->options['overlay_bg_color'])) {
+    $rgb = _vvjs_hex_to_rgb($handler->options['overlay_bg_color']);
+    $opacity = $handler->options['overlay_bg_opacity'] ?? 1;
+    $background_rgb = "rgba({$rgb['r']}, {$rgb['g']}, {$rgb['b']}, $opacity)";
+    $variables['background_rgb'] = $background_rgb;
+  }
+  else {
+    // Explicitly set to null if no color is chosen.
+    $variables['background_rgb'] = NULL;
+  }
+
+  if (!empty($handler->options['show_play_pause'])) {
+    $list_attributes['data-show-play-pause'] = $handler->options['show_play_pause'] ? 'true' : 'false';
+  }
+
+  if (!empty($handler->options['show_slide_progress'])) {
+    $list_attributes['data-show-slide-animation'] = $handler->options['show_slide_progress'] ? 'true' : 'false';
+  }
+
+  if (!empty($handler->options['show_total_slides'])) {
+    $list_attributes['data-show-total-slides'] = $handler->options['show_total_slides'] ? 'true' : 'false';
+  }
+
+  if (!empty($handler->options['hero_slideshow'])) {
+    $list_attributes['data-hero-slideshow'] = $handler->options['hero_slideshow'] ? 'true' : 'false';
+  }
+
+  if (!empty($handler->options['available_breakpoints'])) {
+    $list_attributes['data-available-breakpoints'] = $handler->options['available_breakpoints'];
+  }
+
+  if (isset($handler->options['enable_css'])) {
+    $list_attributes['data-enable-css'] = $handler->options['enable_css'] ? 'true' : 'false';
+  }
+
+  if (!empty($handler->options['min_height'])) {
+    $list_attributes['data-min-height'] = $handler->options['min_height'];
+  }
+
+  if (!empty($handler->options['max_content_width'])) {
+    $list_attributes['data-max-content-width'] = $handler->options['max_content_width'];
+  }
+
+  if (!empty($handler->options['max_width'])) {
+    $list_attributes['data-max-width'] = $handler->options['max_width'];
+  }
+
+  // Create an Attribute object for the list.
+  $variables['list_attributes'] = new Attribute($list_attributes);
+
+  // Pass additional settings to the template.
+  $variables['settings'] = [
+    'view_id' => $handler->view->dom_id,
+    'animation' => $handler->options['animation'],
+    'time_in_seconds' => $handler->options['time_in_seconds'],
+    'navigation' => $handler->options['navigation'],
+    'arrows' => $handler->options['arrows'],
+    'unique_id' => $handler->options['unique_id'],
+    'available_breakpoints' => $handler->options['available_breakpoints'],
+    'enable_css' => $handler->options['enable_css'],
+    'min_height' => $handler->options['min_height'],
+    'max_content_width' => $handler->options['max_content_width'],
+    'max_width' => $handler->options['max_width'],
+    'hero_slideshow' => $handler->options['hero_slideshow'],
+  ];
+
+  // Customize theme hook suggestions for rows.
+  if (!empty($variables['rows'])) {
+    foreach ($variables['rows'] as $key => $row) {
+      if (isset($row['#theme']) && is_array($row['#theme'])) {
+        foreach ($row['#theme'] as $idx => $theme_hook_suggestion) {
+          // Modify theme hook suggestions to use the custom theme function.
+          $variables['rows'][$key]['#theme'][$idx] = str_replace('views_view_fields', 'views_view_vvjs_fields', $theme_hook_suggestion);
+        }
+      }
+    }
+  }
+
+  // Call the default preprocess function for unformatted views.
+  template_preprocess_views_view_unformatted($variables);
+}
+
+/**
+ * Prepares variables for views_view_vvjs_fields template.
+ */
+function template_preprocess_views_view_vvjs_fields(array &$variables) {
+  // Load necessary views theme functions.
+  \Drupal::moduleHandler()->loadInclude('views', 'inc', 'views.theme');
+
+  // Preprocess views view fields.
+  template_preprocess_views_view_fields($variables);
+}
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function vvjs_preprocess_views_view(&$variables) {
+  if ($variables['view']->style_plugin instanceof ViewsVanillaJavascriptSlideshow) {
+    // Add the custom class to the view wrapper.
+    $variables['attributes']['class'][] = 'vvj-slideshow';
+  }
+}
+
+/**
+ * Helper function to convert hex color to RGB.
+ *
+ * @param string $hex
+ *   The hex color code.
+ *
+ * @return array
+ *   An associative array with 'r', 'g', 'b' values.
+ */
+function _vvjs_hex_to_rgb(string $hex): array {
+  $hex = ltrim($hex, '#');
+
+  // Handle short hex format (e.g., #123)
+  if (strlen($hex) === 3) {
+    $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+  }
+
+  return [
+    'r' => hexdec(substr($hex, 0, 2)),
+    'g' => hexdec(substr($hex, 2, 2)),
+    'b' => hexdec(substr($hex, 4, 2)),
+  ];
+}

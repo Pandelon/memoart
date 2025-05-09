@@ -1,0 +1,32 @@
+uuid: 7abfcf9a-d579-4576-9ebf-f9e002cd47e2
+langcode: hu
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: oz6NyPDAB4HB6N9hgH2LwNVtCd-sXbMG1fbn5KsRIDI
+name: 'Korlátozott HTML'
+format: restricted_html
+weight: 1
+filters:
+  filter_autop:
+    id: filter_autop
+    provider: filter
+    status: true
+    weight: 0
+    settings: {  }
+  filter_html:
+    id: filter_html
+    provider: filter
+    status: true
+    weight: -10
+    settings:
+      allowed_html: '<br> <p class="text-align-left text-align-center text-align-right text-align-justify"> <h2 id class="text-align-left text-align-center text-align-right text-align-justify"> <h3 id class="text-align-left text-align-center text-align-right text-align-justify"> <h4 id class="text-align-left text-align-center text-align-right text-align-justify"> <h5 id class="text-align-left text-align-center text-align-right text-align-justify"> <h6 id class="text-align-left text-align-center text-align-right text-align-justify"> <cite> <dl> <dt> <dd> <a hreflang href> <blockquote cite> <ul type> <ol type start> <img data-entity-type data-entity-uuid src alt height width> <strong> <em> <u> <code> <li>'
+      filter_html_help: true
+      filter_html_nofollow: false
+  filter_url:
+    id: filter_url
+    provider: filter
+    status: true
+    weight: 0
+    settings:
+      filter_url_length: 72

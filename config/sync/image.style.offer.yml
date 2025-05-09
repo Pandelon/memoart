@@ -1,0 +1,15 @@
+uuid: 9794fa9a-eba1-4632-b7ed-561c9e42a9c6
+langcode: hu
+status: true
+dependencies: {  }
+name: offer
+label: offer
+effects:
+  029056bf-cfd1-47b0-9da3-f8c59f11fac5:
+    uuid: 029056bf-cfd1-47b0-9da3-f8c59f11fac5
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 150
+      height: 150
+      anchor: center-center

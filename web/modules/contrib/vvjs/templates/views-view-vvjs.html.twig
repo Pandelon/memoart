@@ -1,0 +1,185 @@
+{#
+/**
+ * @file
+ * Default theme implementation for Views to output a Vanilla JavaScript Slideshow.
+ *
+ * Available variables:
+ * - options: View plugin style options.
+ *   - arrows: Display arrows for navigation.
+ *   - navigation: Display bottom navigation (dots or numbers).
+ *   - animation: Animation type for slide transitions.
+ *   - time_in_seconds: Time for each slide.
+ * - rows: The view result rows to be rendered.
+ * - unique_id: A unique identifier for the view instance.
+ *
+ * @see template_preprocess_views_view_vvjs()
+ *
+ * @ingroup themeable
+ */
+#}
+
+{# Set view id #}
+{% set unique_id = options.unique_id %}
+{% set slide_id = 'vvjs-' ~ unique_id %}
+{% set slide_inner_id = 'vvjs-inner-' ~ unique_id %}
+{% set nav_arrows = options.arrows %}
+{# Set the classes for the view #}
+{% set classes = [
+  'vvjs',
+  'vvjs-' ~ unique_id,
+  nav_arrows == 'none' ? '' : nav_arrows,
+  slide_id,
+  options.animation,
+  options.hero_slideshow ? 'hero-slideshow' : 'slideshow',
+  options.show_slide_progress ? 'slide-progress' : '',
+  options.show_total_slides ? 'total-slides' : '',
+  options.available_breakpoints ? 'br-' ~ options.available_breakpoints : '',
+] %}
+
+{# Slideshow fields #}
+{% if options.hero_slideshow %}
+{% set max_width = options.max_width %}
+{% set min_height = options.min_height %}
+{% set max_content_width = options.max_content_width %}
+{% set overlay_position = options.overlay_position %}
+{% endif %}
+
+{% set nav_dots_numbers = options.navigation %}
+{% set time_in_seconds = options.time_in_seconds %}
+{% set show_total_slides = options.show_total_slides %}
+{% set show_play_pause = options.show_play_pause %}
+{% set show_slide_progress = options.show_slide_progress %}
+
+{# Calculate total slides #}
+{% set total_slides = rows|length %}
+
+{# Main wrapper #}
+<div {{ attributes.addClass(classes).setAttribute('id', slide_id) }} role="region" aria-labelledby="slideshow-heading-{{ unique_id }}">
+  <h2 id="slideshow-heading-{{ unique_id }}" class="visually-hidden">{{ 'Slideshow'|t }}</h2>
+
+  <div id="{{ slide_inner_id }}"
+     data-arrows="{{ nav_arrows != 'none' ? 'true' : 'false' }}"
+     data-navigation="{{ nav_dots_numbers != 'none' ? 'true' : 'false' }}"
+     data-show-total-slides="{{ show_total_slides ? 'true' : 'false' }}"
+     data-show-slide-progress="{{ show_slide_progress ? 'true' : 'false' }}"
+     data-play-pause="{{ show_play_pause ? 'true' : 'false' }}"
+     data-static="{{ time_in_seconds == 0 ? 'true' : 'false' }}"
+     data-time="{{ time_in_seconds }}"
+     data-total-slides="{{ rows|length }}"
+     class="vvjs-inner{{ nav_dots_numbers ? ' ' ~ nav_dots_numbers }}{{ time_in_seconds == 0 ? ' zero' : ' not-zero' }}">
+    {# Live region for slide announcements #}
+    <div class="announcer visually-hidden" aria-live="polite" aria-atomic="true">
+      {{ 'Slide 1 selected'|t }}
+    </div>
+    <div id="vvjs-items-{{ unique_id }}" class="vvjs-items"{% if options.hero_slideshow %} style="--hero-max-width: {{ max_width }}; --hero-min-height: {{ min_height }};"{% endif%}>
+
+      {# Start Hero Slideshow #}
+      {% if options.hero_slideshow %}
+
+        {% for key, row in rows %}
+          {% set row_content = row.content|render %}
+
+          {# Split the content to separate front and back sides #}
+          {% set split_content = row_content|split('<div class="vvjs-separator"></div>') %}
+          {% set hero_image = split_content[0] %}
+          {% set hero_content = split_content[1]|default('') %}
+
+          <div id="vvjs-item-{{ unique_id }}-{{ loop.index }}" class="vvjs-item" role="tabpanel" tabindex="{{ loop.first ? '0' : '-1' }}" aria-hidden="{{ loop.first ? 'false' : 'true' }}"{% if nav_dots_numbers %} aria-labelledby="dots-numbers-button-{{ loop.index }}"{% endif %}>
+
+            <div class="vvjs-item-inner" id="{{ slide_inner_id }}-{{ loop.index }}-pane" role="group" aria-labelledby="{{ slide_id }}-image-{{ key + 1 }} {{ slide_id }}-content-{{ key + 1 }}">
+
+              <div class="vvjs-hero-image" role="img" aria-labelledby="{{ slide_id }}-image-{{ key + 1 }}">
+                {{ hero_image|safe_html }}
+              </div>
+
+              <div class="vvjs-hero-content {{ overlay_position }}" style="{% if background_rgb %}--hero-content-bg:{{ background_rgb }};{% endif %} --hero-content-width: {{ max_content_width }};" role="complementary" aria-labelledby="{{ slide_id }}-content-{{ key + 1 }}">
+                {{ hero_content|safe_html }}
+              </div>
+
+            </div>
+
+          </div>
+
+        {% endfor %}
+
+      {# Start Regular Slideshow #}
+      {% else %}
+
+        {% for row in rows %}
+          <div id="vvjs-item-{{ unique_id }}-{{ loop.index }}" class="vvjs-item" role="tabpanel" tabindex="{{ loop.first ? '0' : '-1' }}" aria-hidden="{{ loop.first ? 'false' : 'true' }}"{% if nav_dots_numbers %} aria-labelledby="dots-numbers-button-{{ loop.index }}"{% endif %}>
+            <div id="{{ slide_inner_id }}-{{ loop.index }}-pane" class="vvjs-item-inner">
+              {{ row.content }}
+            </div>
+          </div>
+        {% endfor %}
+
+      {% endif %}
+
+    </div>
+
+    {# Only show navigation elements if there are more than one slide #}
+    {% if total_slides > 1 %}
+      {% if nav_dots_numbers != 'none' or show_total_slides or show_slide_progress or show_play_pause %}
+        <div id="nav-dots-numbers-{{ unique_id }}" aria-label="{{ 'Slideshow Tabs'|t }}" class="nav-dots-numbers {{ nav_dots_numbers }}">
+
+          {% if show_play_pause %}
+          <button id="play-pause-button-{{ unique_id }}"
+          type="button"
+          role="button"
+          aria-label="{{ 'Stop automatic slide show'|t }}"
+          class="button play-pause-button display-{{ time_in_seconds }} play playing">
+            <span class="visually-hidden">{{ 'Play and Stop Slideshow'|t }}</span>
+            {{ include('@vvjs/svg/svg-pause.svg') }}
+          </button>
+          {% endif %}
+
+          {% if show_slide_progress and time_in_seconds > 0 %}
+          <div class="echo-animation">
+            <div class="progressbar"
+                 role="progressbar"
+                 aria-valuenow="0"
+                 aria-valuemin="0"
+                 aria-valuemax="{{ time_in_seconds }}"
+                 aria-label="{{ 'Slideshow progress'|t }}"
+                 aria-live="polite"
+                 data-total-time="{{ time_in_seconds }}"
+                 data-current-progress="0">
+            </div>
+          </div>
+          {% endif %}
+
+          {% if nav_dots_numbers != 'none' %}
+          <div  class="dots-numbers-button-wrapper" role="tablist" aria-label="{{ 'Slideshow Tabs'|t }}">
+          {% for row in rows %}
+            <button id="dots-numbers-button-{{ loop.index }}" class="button dots-numbers-button{{ loop.first ? ' active' : '' }}" type="button" role="tab" aria-label="{{ loop.first ? 'Slide @index selected'|t({'@index': loop.index}) : 'Go to slide @index'|t({'@index': loop.index}) }}" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="vvjs-item-{{ unique_id }}-{{ loop.index }}" tabindex="{{ loop.first ? '0' : '-1' }}">
+              {{ loop.index }}
+            </button>
+          {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if show_total_slides %}
+          <div class="echo-total">
+            <span class="current-slide">1</span>/<span class="total-slides">{{ rows|length }}</span>
+          </div>
+          {% endif %}
+
+        </div>
+      {% endif %}
+
+      {% if nav_arrows != 'none' %}
+        <div id="slide-indicators-{{ unique_id }}" class="slide-indicators" role="navigation" aria-label="{{ 'Slideshow Navigation'|t }}">
+          <button class="button prev-arrow" role="button" aria-controls="vvjs-items-{{ unique_id }}" aria-label="{{ 'Previous Slide'|t }}">
+            <span class="visually-hidden">{{ 'Previous Slide'|t }}</span>
+            {{ include('@vvjs/svg/svg-prev.svg') }}
+          </button>
+          <button class="button next-arrow" role="button" aria-controls="vvjs-items-{{ unique_id }}" aria-label="{{ 'Next Slide'|t }}">
+            <span class="visually-hidden">{{ 'Next Slide'|t }}</span>
+            {{ include('@vvjs/svg/svg-next.svg') }}
+          </button>
+        </div>
+      {% endif %}
+    {% endif %}
+
+  </div>
+</div>

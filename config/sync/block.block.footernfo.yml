@@ -1,0 +1,25 @@
+uuid: caef7816-5a2f-4a61-8d89-dd881f0eff2d
+langcode: hu
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:bf8a0f97-84ac-4a89-b24e-b947937023b2'
+  module:
+    - block_content
+  theme:
+    - memofoto
+id: footernfo
+theme: memofoto
+region: footer
+weight: 0
+provider: null
+plugin: 'block_content:bf8a0f97-84ac-4a89-b24e-b947937023b2'
+settings:
+  id: 'block_content:bf8a0f97-84ac-4a89-b24e-b947937023b2'
+  label: 'Footer nfo'
+  label_display: '0'
+  provider: block_content
+  status: true
+  info: ''
+  view_mode: full
+visibility: {  }

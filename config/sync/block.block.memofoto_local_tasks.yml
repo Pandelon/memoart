@@ -1,0 +1,22 @@
+uuid: 238d7864-8ae6-4857-a192-a3dc34508f6b
+langcode: hu
+status: true
+dependencies:
+  theme:
+    - memofoto
+_core:
+  default_config_hash: X9I1OB0W3WlWtrK-CNcg6hNWwa8wficanpH8pYnDZDE
+id: memofoto_local_tasks
+theme: memofoto
+region: content
+weight: -4
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: Fülek
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: true
+visibility: {  }

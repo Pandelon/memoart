@@ -1,0 +1,22 @@
+uuid: 2ca8f3ab-77dc-43c0-b0bc-5c0de9891ed2
+langcode: hu
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - memofoto
+_core:
+  default_config_hash: 8I8iACSa0sKO3k3jlvUG1ge52rfcKX7USJAQYnzuBgg
+id: memofoto_help
+theme: memofoto
+region: content
+weight: -3
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Súgó
+  label_display: '0'
+  provider: help
+visibility: {  }

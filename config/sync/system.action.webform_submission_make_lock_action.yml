@@ -1,0 +1,13 @@
+uuid: 65fd5d9a-2c11-489c-b9e5-0dddd1cdfda7
+langcode: hu
+status: true
+dependencies:
+  module:
+    - webform
+_core:
+  default_config_hash: MKmZlPRk3OJKNcYdYxSeZGQUh7LMah6MRShfkzch4bk
+id: webform_submission_make_lock_action
+label: 'Beküldés zárolása'
+type: webform_submission
+plugin: webform_submission_make_lock_action
+configuration: {  }

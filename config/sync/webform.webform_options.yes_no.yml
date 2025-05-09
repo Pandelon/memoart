@@ -1,0 +1,16 @@
+uuid: 1ea26064-153d-4f1b-b4a8-4e324773fc21
+langcode: hu
+status: true
+dependencies:
+  enforced:
+    module:
+      - webform
+_core:
+  default_config_hash: W88NYg31DbaVNQx1Uir_dwwXHVtF09QOq4VBGsH1Snk
+id: yes_no
+label: 'Igen / Nem'
+category: General
+likert: false
+options: |
+  Yes: Yes
+  No: No

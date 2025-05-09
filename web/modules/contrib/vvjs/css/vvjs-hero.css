@@ -1,0 +1,96 @@
+/**
+ * @file
+ * VVJ Hero.
+ *
+ * Filename:     vvjs.css
+ * Website:      https://www.flashwebcenter.com
+ * Developer:    Alaa Haddad https://www.alaahaddad.com.
+ */
+.vvjs.hero-slideshow {
+  position: relative;
+  width: 100%;
+}
+
+.vvjs.hero-slideshow .vvjs-items {
+  margin: 0 auto;
+  display: block;
+  overflow: hidden;
+  background-color: transparent;
+  width: 100%;
+  max-width: initial;
+  min-height: initial;
+}
+
+.vvjs.hero-slideshow .vvjs-items .vvjs-hero-content {
+  background: var(--hero-content-bg);
+  max-width: 100%;
+  width: 100%;
+}
+
+.vvjs.hero-slideshow.a-top .vvjs-item-inner img {
+  animation: heroanimatetop 0.6s ease-out;
+}
+
+@keyframes heroanimatetop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+}
+
+.vvjs.hero-slideshow.a-left .vvjs-item-inner img {
+  animation: heroanimateleft 0.6s ease-out;
+}
+
+@keyframes heroanimateleft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+}
+
+.vvjs.hero-slideshow.a-right .vvjs-item-inner img {
+  animation: heroanimateright 0.6s ease-out;
+}
+
+@keyframes heroanimateright {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+}
+
+.vvjs.hero-slideshow.a-bottom .vvjs-item-inner img {
+  animation: heroanimatebottom 0.6s ease-out;
+}
+
+@keyframes heroanimatebottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+}

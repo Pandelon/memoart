@@ -1,0 +1,18 @@
+uuid: 7cbb9a3f-17d4-4639-ba87-f781902760ac
+langcode: hu
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: Galeria
+type: galeria
+description: null
+help: null
+new_revision: false
+preview_mode: 1
+display_submitted: false

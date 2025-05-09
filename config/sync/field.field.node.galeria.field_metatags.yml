@@ -1,0 +1,21 @@
+uuid: 3c9ea2ad-45f1-4b1c-a826-4e33df331f1f
+langcode: hu
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_metatags
+    - node.type.galeria
+  module:
+    - metatag
+id: node.galeria.field_metatags
+field_name: field_metatags
+entity_type: node
+bundle: galeria
+label: Metatags
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: metatag

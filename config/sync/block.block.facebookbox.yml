@@ -1,0 +1,31 @@
+uuid: c20b6afa-14a9-4888-836d-33cb12561860
+langcode: hu
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:098b3df4-bbfc-4bc9-8864-00a27335a50d'
+  module:
+    - block_content
+    - system
+  theme:
+    - memofoto
+id: facebookbox
+theme: memofoto
+region: sidebar_second
+weight: 0
+provider: null
+plugin: 'block_content:098b3df4-bbfc-4bc9-8864-00a27335a50d'
+settings:
+  id: 'block_content:098b3df4-bbfc-4bc9-8864-00a27335a50d'
+  label: 'facebook box'
+  label_display: '0'
+  provider: block_content
+  status: true
+  info: ''
+  view_mode: full
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    context_mapping: {  }
+    pages: '<front>'

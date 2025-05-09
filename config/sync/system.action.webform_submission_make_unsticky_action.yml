@@ -1,0 +1,13 @@
+uuid: d3670fa7-beb3-4a62-a7ab-70136b0c00e7
+langcode: hu
+status: true
+dependencies:
+  module:
+    - webform
+_core:
+  default_config_hash: n4gTFiUsdp7gw6yWUlDbKFEasZLCgXWWCmm7eJejay0
+id: webform_submission_make_unsticky_action
+label: 'Beküldés csillagozásának/megjelölésének megszüntetése'
+type: webform_submission
+plugin: webform_submission_make_unsticky_action
+configuration: {  }

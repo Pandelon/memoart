@@ -1,0 +1,10 @@
+uuid: 14d78862-7d97-4de5-b0ea-d2aa3b7a434d
+langcode: hu
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: og8sWXhBuHbLMw3CoiBEZjgqSyhFBFmcbUW_wLcfNbo
+id: long
+label: 'Alapértelmezett hosszú dátum idővel'
+locked: false
+pattern: 'Y. F j., l – H:i'

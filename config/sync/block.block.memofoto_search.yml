@@ -1,0 +1,23 @@
+uuid: d4637d07-7c1e-4227-8796-14f62734c16c
+langcode: hu
+status: false
+dependencies:
+  module:
+    - search
+  theme:
+    - memofoto
+_core:
+  default_config_hash: Q-4EcGAsu26ICu4ejEz0uE1zv4akpiaOsizxgZfAmEw
+id: memofoto_search
+theme: memofoto
+region: sidebar_first
+weight: -1
+provider: null
+plugin: search_form_block
+settings:
+  id: search_form_block
+  label: Keresés
+  label_display: visible
+  provider: search
+  page_id: node_search
+visibility: {  }

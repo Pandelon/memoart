@@ -1,0 +1,56 @@
+vvjs:
+  css:
+    theme:
+      css/vvjs.css: { }
+  js:
+    js/vvjs.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
+    - core/once
+
+vvjs-hero:
+  css:
+    theme:
+      css/vvjs-hero.css: { }
+
+vvjs-style:
+  css:
+    theme:
+      css/vvjs-style.css: { }
+
+
+vvjs__576:
+  css:
+    theme:
+      css/vvjs-576.css: { }
+
+vvjs__768:
+  css:
+    theme:
+      css/vvjs-768.css: { }
+
+vvjs__992:
+  css:
+    theme:
+      css/vvjs-992.css: { }
+
+vvjs__1200:
+  css:
+    theme:
+      css/vvjs-1200.css: { }
+
+vvjs__1400:
+  css:
+    theme:
+      css/vvjs-1400.css: { }
+
+opacity:
+  js:
+    js/opacity.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
+    - core/once

@@ -1,0 +1,13 @@
+uuid: 9eb110ba-bce3-409e-ad34-10c2285318e2
+langcode: hu
+status: false
+dependencies:
+  module:
+    - user
+_core:
+  default_config_hash: mQIF_foYjmnVSr9MpcD4CTaJE_FpO1AyDd_DskztGhM
+id: user.full
+label: 'Felhasználói fiók'
+description: ''
+targetEntityType: user
+cache: true

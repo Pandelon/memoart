@@ -1,0 +1,14 @@
+uuid: ae714da1-51cf-47ca-b2ae-246259ebd1ef
+langcode: hu
+status: true
+dependencies:
+  config:
+    - user.role.szerkeszto
+  module:
+    - user
+id: user_remove_role_action.szerkeszto
+label: 'Szerkesztő szerepkör megvonása a kiválasztott felhasználóktól.'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: szerkeszto

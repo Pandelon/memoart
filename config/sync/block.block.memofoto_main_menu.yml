@@ -1,0 +1,27 @@
+uuid: dfa843d1-9bcf-4a5a-aac7-230c1869e070
+langcode: hu
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - memofoto
+_core:
+  default_config_hash: ChCx7DYNUrPTt5uiRdQAPDKJQMc-_SyAQTrZh8H0o-c
+id: memofoto_main_menu
+theme: memofoto
+region: nav_main
+weight: -6
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'Fő navigáció'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: 3
+  expand_all_items: false
+visibility: {  }

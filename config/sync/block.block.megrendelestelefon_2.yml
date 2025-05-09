@@ -1,0 +1,33 @@
+uuid: 545566e2-b310-41ef-8b64-f614a126e29f
+langcode: hu
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:d3649591-c10b-4768-8816-bcf8a8f98a72'
+  module:
+    - block_content
+    - node
+  theme:
+    - memofoto
+id: megrendelestelefon_2
+theme: memofoto
+region: content
+weight: 0
+provider: null
+plugin: 'block_content:d3649591-c10b-4768-8816-bcf8a8f98a72'
+settings:
+  id: 'block_content:d3649591-c10b-4768-8816-bcf8a8f98a72'
+  label: Megrendelés/telefon
+  label_display: '0'
+  provider: block_content
+  status: true
+  info: ''
+  view_mode: full
+visibility:
+  'entity_bundle:node':
+    id: 'entity_bundle:node'
+    negate: false
+    context_mapping:
+      node: '@node.node_route_context:node'
+    bundles:
+      galeria: galeria

@@ -1,0 +1,20 @@
+uuid: 0066e2cd-cb05-42a3-bff1-cf1fd10da9f3
+langcode: hu
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - memofoto
+id: mainpagecontent
+theme: memofoto
+region: front_second
+weight: 0
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility: {  }

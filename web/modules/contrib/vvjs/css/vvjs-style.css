@@ -1,0 +1,84 @@
+/**
+ * @file
+ * Views Vanilla Javascript Slideshow.
+ *
+ * Filename:     vvjs-style.css
+ * Website:      https://www.flashwebcenter.com
+ * Developer:    Alaa Haddad https://www.alaahaddad.com.
+ */
+.vvjs {
+  overflow: hidden;
+}
+
+.vvjs .nav-dots-numbers.numbers > .active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.vvjs .nav-dots-numbers {
+  min-height: calc(2 * 20px);
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.vvjs .nav-dots-numbers .button {
+  margin: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  padding: 6px;
+  max-height: 40px;
+}
+
+.vvjs .nav-dots-numbers .button {
+  background-color: transparent;
+}
+
+.vvjs .nav-dots-numbers .play {
+  font-weight: bold;
+}
+
+.vvjs .nav-dots-numbers.numbers .dots-numbers-button.active {
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+@media (min-width:36rem) {
+  .vvjs.hero-slideshow.br-576 .nav-dots-numbers {
+    background-color: black;
+  }
+
+}
+
+@media (min-width:48rem) {
+  .vvjs.hero-slideshow.br-768 .nav-dots-numbers {
+    background-color: black;
+  }
+
+}
+
+@media (min-width:62rem) {
+  .vvjs.hero-slideshow.br-992 .nav-dots-numbers {
+    background-color: black;
+  }
+
+}
+
+@media (min-width:75rem) {
+  .vvjs.hero-slideshow.br-1200 .nav-dots-numbers {
+    background-color: black;
+  }
+
+}
+
+@media (min-width:87.5rem) {
+  .vvjs.hero-slideshow.br-1400 .nav-dots-numbers {
+    background-color: black;
+  }
+
+}

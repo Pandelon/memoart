@@ -1,0 +1,8 @@
+uuid: 6233b289-6477-4da0-b049-c1b767d0c3b9
+langcode: hu
+status: true
+dependencies: {  }
+id: Q-DnbT83L1sy4kAX_nYRCyT4AJOTpg30-XEPI1hmyNg
+label: 'Me. Mo. Foto'
+context:
+  language: hu

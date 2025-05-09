@@ -1,0 +1,14 @@
+uuid: f24fc096-1744-4749-9b3d-2f6dba1662c2
+langcode: hu
+status: true
+dependencies:
+  enforced:
+    module:
+      - webform
+_core:
+  default_config_hash: adQ16YGDPk7QfUKrfrC35o2sKdHEozdNtdpiH7CftQQ
+id: country_codes
+label: Országkódok
+category: Geographic
+likert: false
+options: ''

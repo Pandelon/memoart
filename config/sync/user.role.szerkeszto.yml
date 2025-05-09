@@ -1,0 +1,153 @@
+uuid: 170ee120-adf1-4121-b32b-b00c9043d386
+langcode: hu
+status: true
+dependencies:
+  config:
+    - filter.format.full_html
+    - filter.format.restricted_html
+    - media.type.document
+    - media.type.image
+    - media.type.remote_video
+    - media.type.video
+    - node.type.article
+    - node.type.galeria
+    - node.type.page
+    - node.type.webform
+    - taxonomy.vocabulary.tags
+  module:
+    - block
+    - block_content
+    - contact
+    - contextual
+    - field_ui
+    - file
+    - filter
+    - help
+    - media
+    - metatag
+    - node
+    - recaptcha
+    - search
+    - shortcut
+    - system
+    - taxonomy
+    - toolbar
+    - webform
+    - webform_node
+    - xmlsitemap
+id: szerkeszto
+label: Szerkesztő
+weight: 3
+is_admin: null
+permissions:
+  - 'access administration pages'
+  - 'access any webform configuration'
+  - 'access block library'
+  - 'access content overview'
+  - 'access contextual links'
+  - 'access files overview'
+  - 'access help pages'
+  - 'access media overview'
+  - 'access own webform configuration'
+  - 'access shortcuts'
+  - 'access taxonomy overview'
+  - 'access toolbar'
+  - 'access user contact forms'
+  - 'access webform help'
+  - 'access webform overview'
+  - 'access webform submission user'
+  - 'administer block content'
+  - 'administer block types'
+  - 'administer blocks'
+  - 'administer media'
+  - 'administer media display'
+  - 'administer media fields'
+  - 'administer media types'
+  - 'administer menu'
+  - 'administer meta tags'
+  - 'administer recaptcha'
+  - 'administer search'
+  - 'administer shortcuts'
+  - 'administer taxonomy'
+  - 'administer webform'
+  - 'administer webform element access'
+  - 'administer webform submission'
+  - 'administer xmlsitemap'
+  - 'bypass node access'
+  - 'create article content'
+  - 'create document media'
+  - 'create galeria content'
+  - 'create image media'
+  - 'create media'
+  - 'create page content'
+  - 'create remote_video media'
+  - 'create terms in tags'
+  - 'create video media'
+  - 'create webform'
+  - 'create webform content'
+  - 'customize shortcut links'
+  - 'delete any article content'
+  - 'delete any document media'
+  - 'delete any galeria content'
+  - 'delete any image media'
+  - 'delete any media'
+  - 'delete any page content'
+  - 'delete any remote_video media'
+  - 'delete any video media'
+  - 'delete any webform content'
+  - 'delete any webform submission'
+  - 'delete article revisions'
+  - 'delete galeria revisions'
+  - 'delete media'
+  - 'delete own article content'
+  - 'delete own document media'
+  - 'delete own files'
+  - 'delete own galeria content'
+  - 'delete own image media'
+  - 'delete own page content'
+  - 'delete own remote_video media'
+  - 'delete own video media'
+  - 'delete own webform'
+  - 'delete own webform content'
+  - 'delete own webform submission'
+  - 'delete page revisions'
+  - 'delete terms in tags'
+  - 'delete webform revisions'
+  - 'edit any article content'
+  - 'edit any document media'
+  - 'edit any galeria content'
+  - 'edit any image media'
+  - 'edit any page content'
+  - 'edit any remote_video media'
+  - 'edit any video media'
+  - 'edit any webform'
+  - 'edit any webform content'
+  - 'edit own article content'
+  - 'edit own document media'
+  - 'edit own galeria content'
+  - 'edit own image media'
+  - 'edit own page content'
+  - 'edit own remote_video media'
+  - 'edit own video media'
+  - 'edit own webform content'
+  - 'edit terms in tags'
+  - 'edit webform submissions any node'
+  - 'edit webform submissions own node'
+  - 'revert article revisions'
+  - 'revert galeria revisions'
+  - 'revert page revisions'
+  - 'revert webform revisions'
+  - 'switch shortcut sets'
+  - 'update any media'
+  - 'update media'
+  - 'use advanced search'
+  - 'use text format full_html'
+  - 'use text format restricted_html'
+  - 'view all media revisions'
+  - 'view article revisions'
+  - 'view media'
+  - 'view own unpublished media'
+  - 'view page revisions'
+  - 'view the administration theme'
+  - 'view webform submissions any node'
+  - 'view webform submissions own node'

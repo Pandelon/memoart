@@ -1,0 +1,30 @@
+h2 a {
+  color: $memo_accent;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+    color: darken($memo_accent, 20) ;
+  }
+}
+
+.flex-control-nav {
+  display: none;
+}
+.flex-direction-nav a::before {
+  color: $memo_accent;
+  font-size: 35px;
+}
+
+div#cconsent-bar {
+  background-color: $memo_accent;
+  color: black;
+}
+
+.region-nav-additional {
+  .field--name-body {
+    img {
+      margin: 0 .5rem;
+    }
+  }
+}

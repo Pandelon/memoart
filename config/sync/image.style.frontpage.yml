@@ -1,0 +1,15 @@
+uuid: 5fbc10e1-2d02-40d7-b493-54044d4686ed
+langcode: hu
+status: true
+dependencies: {  }
+name: frontpage
+label: 'frontpage (800x600)'
+effects:
+  cbd11e9d-be62-4e78-bcde-88d4ae7c3772:
+    uuid: cbd11e9d-be62-4e78-bcde-88d4ae7c3772
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 800
+      height: 600
+      anchor: center-center

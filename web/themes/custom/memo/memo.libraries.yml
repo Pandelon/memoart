@@ -1,0 +1,7 @@
+global-styling:
+  css:
+    theme:
+      css/style.css: {}
+  js:
+    js/horizontal_masonry.js: {}
+    js/imagesLoaded.min.js: {}

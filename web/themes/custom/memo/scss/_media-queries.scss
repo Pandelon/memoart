@@ -1,0 +1,60 @@
+
+@media only screen and (max-width : 480px){
+
+  .navbar-default .navbar-brand {
+    margin-top: 0;
+    height: inherit;
+  }
+
+  header {
+    position: relative;
+  }
+  .navbar-toggler {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+  .navbar-brand {
+    margin: 0;
+    img {
+      height: 180px;
+      margin: 0;
+      width: auto;
+    }
+  } 
+
+  #navbar-collapse {
+    position: relative;
+    width: inherit;
+    .menu.nav {
+      li {
+        display: block;
+      }
+    }
+   }
+
+  .dropdown-menu > li > a {
+    white-space: normal;
+  }
+  .field--name-field-galeria-kepek {
+    display: block;
+    .field__item img {
+       width: 100%;
+    }
+  }
+  .field--name-field-media-image {
+    width: 100%;
+  }
+
+  .view-frontpage {
+    .view-content {
+      display:block;
+    }
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar-brand img {
+    height: 100px;
+  }
+}

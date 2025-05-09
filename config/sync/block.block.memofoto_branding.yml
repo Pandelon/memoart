@@ -1,0 +1,25 @@
+uuid: 60bdc120-883c-4e22-b5af-5c5ece606f23
+langcode: hu
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - memofoto
+_core:
+  default_config_hash: NDwadleLD3YVSbDUaakxyYZyINYtkFtOVGShfq4kWy8
+id: memofoto_branding
+theme: memofoto
+region: nav_branding
+weight: -6
+provider: null
+plugin: system_branding_block
+settings:
+  id: system_branding_block
+  label: 'Webhely márkázása'
+  label_display: '0'
+  provider: system
+  use_site_logo: true
+  use_site_name: true
+  use_site_slogan: true
+visibility: {  }

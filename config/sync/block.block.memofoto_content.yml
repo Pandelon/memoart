@@ -1,0 +1,22 @@
+uuid: bf8556a8-26e8-473e-aa18-81d88b1661ce
+langcode: hu
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - memofoto
+_core:
+  default_config_hash: 9EoWV2Lot6FVSr50t4hoKgiz1LIXYWNG-IIPYsWxBqo
+id: memofoto_content
+theme: memofoto
+region: content
+weight: -1
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Az oldal fő tartalma'
+  label_display: '0'
+  provider: system
+visibility: {  }

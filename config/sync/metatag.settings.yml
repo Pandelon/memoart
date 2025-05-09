@@ -1,0 +1,11 @@
+entity_type_groups:
+  media:
+    image:
+      basic: basic
+      schema_image_object: schema_image_object
+  node:
+    article:
+      basic: basic
+    galeria:
+      advanced: advanced
+tag_trim_end: '|.,-:;/+&([{"'''

@@ -1,0 +1,23 @@
+uuid: 76cab5ac-7b0b-4583-b716-62bbabedb22f
+langcode: hu
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.galeria
+  module:
+    - text
+id: node.galeria.body
+field_name: body
+entity_type: node
+bundle: galeria
+label: Body
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+  required_summary: false
+field_type: text_with_summary

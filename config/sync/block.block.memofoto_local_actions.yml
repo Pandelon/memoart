@@ -1,0 +1,20 @@
+uuid: 703e7585-884c-4b00-8d5e-2222da66633d
+langcode: hu
+status: true
+dependencies:
+  theme:
+    - memofoto
+_core:
+  default_config_hash: 13GQpeITIJsp1kyPniXtWZfyFH87vb1xxJCHifL4UeE
+id: memofoto_local_actions
+theme: memofoto
+region: content
+weight: -2
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Elsődleges adminisztrátori műveletek'
+  label_display: '0'
+  provider: core
+visibility: {  }

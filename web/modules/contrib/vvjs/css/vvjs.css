@@ -1,0 +1,439 @@
+/**
+ * @file
+ * Views Vanilla Javascript Slideshow.
+ *
+ * Filename:     vvjs.css
+ * Website:      https://www.flashwebcenter.com
+ * Developer:    Alaa Haddad https://www.alaahaddad.com.
+ */
+.vvj-slideshow .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+.vvjs {
+  overflow: hidden;
+}
+
+.vvj-slideshow,
+.vvj-slideshow * {
+  box-sizing: border-box;
+}
+
+.vvj-slideshow,
+.vvj-slideshow .view-content {
+  width: 100%;
+  min-width: 100%;
+  display: block !important;
+}
+
+.hidden-element {
+  display: none;
+}
+
+.vvjs .vvjs-items {
+  overflow: hidden;
+  transition: all 0.5s ease-in-out;
+}
+
+.vvjs .vvjs-items > .vvjs-item {
+  display: none;
+  transition: transform 0.5s ease-in-out;
+}
+
+/**
+ * Prevent margin collapse inside slide containers.
+ * Ensures getBoundingClientRect() captures full height.
+ */
+
+.vvjs .vvjs-items .vvjs-item-inner {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  overflow: hidden;
+}
+
+.vvjs .vvjs-items > div:first-of-type {
+  display: block;
+}
+
+.vvjs .vvjs-inner {
+  position: relative;
+}
+
+/* Arrows */
+.vvjs .vvjs-inner > .slide-indicators {
+  background-color: transparent !important;
+  width: 100%;
+}
+
+.vvjs .slide-indicators button {
+  all: unset;
+  overflow: hidden;
+  position: absolute;
+  cursor: pointer;
+  transition: 0.4s;
+  outline: none;
+  min-height: 48px;
+  min-width: 48px;
+  font-size: 48px;
+  text-decoration: none !important;
+  background-color: transparent !important;
+}
+
+.vvjs  .slide-indicators button {
+  top: calc(50% - 24px);
+}
+
+.vvjs .vvjs-inner.not-zero > .slide-indicators button,
+.vvjs .vvjs-inner.numbers.zero > .slide-indicators button,
+.vvjs .vvjs-inner.numbers.not-zero > .slide-indicators button,
+.vvjs .vvjs-inner.dots.zero > .slide-indicators button,
+.vvjs .vvjs-inner.dots.not-zero > .slide-indicators button {
+  top: calc(50% - 48px);
+}
+
+.vvjs .slide-indicators .next-arrow {
+  right: 48px;
+}
+
+.vvjs .slide-indicators .prev-arrow {
+  left: 48px;
+}
+
+.vvjs .slide-indicators.arrows-sides {
+  opacity: 1;
+}
+
+.vvjs.arrows-top .slide-indicators {
+  opacity: 0.2;
+  transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.vvjs.arrows-top .slide-indicators:hover {
+  opacity: 100;
+  outline: none;
+  background-color: transparent !important;
+}
+
+.vvjs.arrows-sides .vvjs-inner {
+  width: calc(100% - 120px);
+  margin: 0 auto;
+}
+
+.vvjs.arrows-sides .slide-indicators .next-arrow {
+  right: -60px;
+}
+
+.vvjs.arrows-sides .slide-indicators .prev-arrow {
+  left: -60px;
+}
+
+.vvjs .display-0 {
+  display: none;
+}
+
+.next-arrow svg,
+.prev-arrow svg {
+  width: 50px;
+  height: 50px;
+  fill: gray;
+}
+
+/* Bottom nav */
+.nav-dots-numbers,
+.dots-numbers-button-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-indicators *,
+.nav-dots-numbers * {
+  line-height: 1;
+}
+
+.play-pause-button {
+  padding: 0 4px;
+}
+
+.play-pause-button svg {
+  width: 40px;
+  height: 40px;
+  fill: gray;
+}
+
+.vvjs .nav-dots-numbers.dots .dots-numbers-button,
+.vvjs .nav-dots-numbers.numbers .dots-numbers-button {
+  opacity: 100;
+}
+
+/*.nav-dots-numbers:not(.dots, .numbers) .dots-numbers-button {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  width: 0;
+  font-size: 8px;
+  line-height: 0;
+}*/
+
+.vvjs .nav-dots-numbers.numbers .dots-numbers-button {
+  line-height: 1.4;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin: 0 5px;
+  font-size: 14px;
+  font-weight: bold;
+  color: currentColor;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.vvjs .nav-dots-numbers.numbers .dots-numbers-button {
+  transform: scale(1);
+}
+
+.vvjs .nav-dots-numbers.numbers .dots-numbers-button:hover {
+  transform: scale(1.1);
+}
+
+.vvjs .nav-dots-numbers.numbers .dots-numbers-button.active {
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+  transform: scale(1.2);
+  animation: activeBounce 0.6s ease-in-out;
+}
+
+@keyframes activeBounce {
+  0% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1.2);
+  }
+
+}
+
+.vvjs .nav-dots-numbers.dots .dots-numbers-button {
+  all: unset;
+  border: none;
+  cursor: pointer;
+}
+
+.vvjs .nav-dots-numbers .dots-numbers-button.active {
+  pointer-events: none;
+  cursor: none;
+}
+
+.vvjs .nav-dots-numbers.dots .dots-numbers-button {
+  padding: 0 !important;
+  margin: 10px 8px;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  font-size: 0 !important;
+  line-height: initial !important;
+  transition: width 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, background-color 0.3s ease;
+  border-width: 2px;
+  border-style: solid;
+  border-color: currentColor;
+}
+
+.vvjs .nav-dots-numbers.dots .dots-numbers-button:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.vvjs .nav-dots-numbers.dots .dots-numbers-button.active {
+  width: calc(2 * 10px) !important;
+  border-radius: 50% !important;
+  border-width: 2px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  animation: activePulse 1.5s infinite alternate;
+}
+
+/* Container styling for the animation */
+.echo-total,
+.echo-animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  margin: 8px;
+}
+
+.progressbar {
+  overflow: hidden;
+  --progress: 0%;
+  --size: 40px;
+  --bar-width: 10px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: conic-gradient(#007bff var(--progress), #e6e6e6 0%);
+  display: grid;
+  place-items: center;
+  position: relative;
+  transition: background 0.3s linear, transform 0.3s ease;
+}
+
+.progressbar::after {
+  content: attr(aria-valuenow) "%";
+  width: calc(100% - var(--bar-width));
+  height: calc(100% - var(--bar-width));
+  border-radius: inherit;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #007bff; /* Blue text */
+  position: absolute;
+  transition: color 0.3s ease-in-out;
+}
+
+.progressbar[aria-valuenow="100"] {
+  background: conic-gradient(#007bff 100%, #007bff 0%);
+  transform: scale(1.05); /* Subtle zoom at full progress */
+}
+
+.progressbar[aria-valuenow="100"]::after {
+  content: "100%";
+  color: #fff;
+}
+
+@keyframes activePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  }
+
+  100% {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+  }
+
+}
+
+/* For any slideshow */
+.vvjs-hero-content,
+.vvjs.slideshow.a-fade .vvjs-item-inner,
+.vvjs.hero-slideshow.a-fade .vvjs-item-inner img {
+  animation: opac 0.8s ease-out;
+}
+
+@keyframes opac {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+
+}
+
+.vvjs.slideshow.a-zoom .vvjs-item-inner,
+.vvjs.hero-slideshow.a-zoom .vvjs-item-inner img {
+  animation: animatezoom 0.6s ease-out;
+}
+
+@keyframes animatezoom {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+
+/* For NOT hero slideshow */
+.vvjs.slideshow.a-top .vvjs-item-inner {
+  position: relative;
+  animation: animatetop 0.6s ease-out;
+}
+
+@keyframes animatetop {
+  from {
+    top: -100px;
+    opacity: 0;
+  }
+
+  to {
+    top: 0;
+    opacity: 1;
+  }
+
+}
+
+.vvjs.slideshow.a-left .vvjs-item-inner {
+  position: relative;
+  animation: animateleft 0.6s ease-out;
+}
+
+@keyframes animateleft {
+  from {
+    left: -100px;
+    opacity: 0;
+  }
+
+  to {
+    left: 0;
+    opacity: 1;
+  }
+
+}
+
+.vvjs.slideshow.a-right .vvjs-item-inner {
+  position: relative;
+  animation: animateright 0.6s ease-out;
+}
+
+@keyframes animateright {
+  from {
+    right: -100px;
+    opacity: 0;
+  }
+
+  to {
+    right: 0;
+    opacity: 1;
+  }
+
+}
+
+.vvjs.slideshow.a-bottom .vvjs-item-inner {
+  position: relative;
+  animation: animatebottom 0.6s ease-out;
+}
+
+@keyframes animatebottom {
+  from {
+    bottom: -100px;
+    opacity: 0;
+  }
+
+  to {
+    bottom: 0;
+    opacity: 1;
+  }
+
+}

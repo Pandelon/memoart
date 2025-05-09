@@ -1,0 +1,36 @@
+uuid: 8379b9e0-5b3d-426a-949f-f50ad5aff9b2
+langcode: hu
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.galeria.body
+    - field.field.node.galeria.field_galeria_kepek
+    - field.field.node.galeria.field_metatags
+    - node.type.galeria
+  module:
+    - text
+    - user
+id: node.galeria.teaser
+targetEntityType: node
+bundle: galeria
+mode: teaser
+content:
+  body:
+    type: text_summary_or_trimmed
+    label: hidden
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  addtoany: true
+  field_galeria_kepek: true
+  field_metatags: true
+  langcode: true

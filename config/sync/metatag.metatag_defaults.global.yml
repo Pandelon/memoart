@@ -1,0 +1,18 @@
+uuid: f0293c99-b293-433d-a318-37d94d77dcb1
+langcode: hu
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: sL588ui1E_8-2c_UupwyYxcqX2OVyMFp3HTLbbFqvPc
+id: global
+label: Global
+tags:
+  abstract: 'Gyermek fotózás, profil fotózás, rendezvény emlékezetes megörökítése - nem csak esküvő!'
+  geo_placename: Budapest
+  canonical_url: '[current-page:url]'
+  title: '[current-page:title] | [site:name]'
+  generator: 'Drupal 9'
+  robots: 'index, follow'
+  description: "Meggyesi Mónika fotós weboldala. Profi, laza és kedves. Öröm vele együtt dolgozni. \r\n"
+  image_src: '[site:url]/sites/default/files/kepek/[node:field_media:0:entity]'
+  schema_article_type: Article
