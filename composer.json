@@ -42,7 +42,7 @@
         "drupal/views_slideshow": "^5.0",
         "drupal/vvjs": "^1.0",
         "drupal/webform": "^6.3@beta",
-        "drupal/xmlsitemap": "^2.0@beta",
+        "drupal/xmlsitemap": "^2.0",
         "drush/drush": "^13",
         "webflo/drupal-finder": "^1.0.0",
         "webmozart/path-util": "^2.3"
