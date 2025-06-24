@@ -1,0 +1,155 @@
+/**
+ * @file
+ * Views Hero
+ *
+ * Filename:     vvjs-hero-576.css
+ * Website:      https://www.flashwebcenter.com
+ * Developer:    Alaa Haddad https://www.alaahaddad.com.
+ */
+@media (min-width:36rem) {
+  .vvjs.br-576.hero-slideshow .vvjs-items {
+    max-width: calc(var(--hero-max-width, 1200) * 1px);
+    min-height: calc(var(--hero-min-height, 40) * 1vw);
+  }
+
+  .vvjs.br-576.hero-slideshow .vvjs-items .vvjs-item,
+  .vvjs.br-576.hero-slideshow .vvjs-items .vvjs-item .vvjs-item-inner {
+    width: 100%;
+    height: 100%;
+  }
+
+  .vvjs.br-576.hero-slideshow .vvjs-items .vvjs-hero-content {
+    width: calc(var(--hero-content-width, 30) * 1%);
+  }
+
+  .vvjs.br-576.hero-slideshow .nav-dots-numbers {
+    position: absolute;
+    width: 100%;
+    min-height: 70px;
+    display: flex;
+    bottom: -70px;
+    left: 0;
+    right: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .vvjs.hero-slideshow .vvjs-items {
+    margin-bottom: 70px;
+  }
+
+  .vvjs.br-576 .vvjs-item {
+    overflow: hidden;
+    background-color: transparent;
+    width: 100%;
+  }
+
+  .br-576 .vvjs-item {
+    display: flex;
+    align-items: center;
+    margin: auto;
+    padding: 0 1rem;
+  }
+
+  .br-576 .vvjs-hero-content {
+    margin: 0;
+    padding: 1rem;
+  }
+
+  .vvjs.br-576 .vvjs-item .vvjs-hero-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin-bottom: 50px;
+  }
+
+  /* Display Container */
+  .vvjs.br-576 .vvjs-hero-content.d-top-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-top-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-bottom-left {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-bottom-right {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-middle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-left {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(0%, -50%);
+    -ms-transform: translate(-0%, -50%);
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-right {
+    position: absolute;
+    top: 50%;
+    right: 0%;
+    transform: translate(0%, -50%);
+    -ms-transform: translate(0%, -50%);
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-top-middle {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0%);
+    -ms-transform: translate(-50%, 0%);
+  }
+
+  .vvjs.br-576 .vvjs-hero-content.d-bottom-middle {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 0%);
+    -ms-transform: translate(-50%, 0%);
+  }
+
+}
+
+@media (max-width:35.99875rem) {
+  .vvjs.br-576 .vvjs-item {
+    width: 100%;
+    margin-bottom: 1rem;
+    min-height: initial !important;
+  }
+
+  .vvjs.br-576 .vvjs-hero-content {
+    background-color: transparent !important;
+    max-width: 100% !important;
+    width: 100%;
+    margin-top: 1rem;
+    transition: none !important;
+  }
+
+  .vvjs.br-576 .vvjs-hero-image {
+    overflow: hidden;
+  }
+
+}

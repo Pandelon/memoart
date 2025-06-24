@@ -46,6 +46,31 @@ vvjs__1400:
     theme:
       css/vvjs-1400.css: { }
 
+vvjs-hero__576:
+  css:
+    theme:
+      css/vvjs-hero-576.css: { }
+
+vvjs-hero__768:
+  css:
+    theme:
+      css/vvjs-hero-768.css: { }
+
+vvjs-hero__992:
+  css:
+    theme:
+      css/vvjs-hero-992.css: { }
+
+vvjs-hero__1200:
+  css:
+    theme:
+      css/vvjs-hero-1200.css: { }
+
+vvjs-hero__1400:
+  css:
+    theme:
+      css/vvjs-hero-1400.css: { }
+
 opacity:
   js:
     js/opacity.js: {}

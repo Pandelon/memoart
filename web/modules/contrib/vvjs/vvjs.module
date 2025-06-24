@@ -12,6 +12,9 @@
  * Developer:    Alaa Haddad https://www.alaahaddad.com.
  */
 
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Render\Markup;
+use Drupal\views\ViewExecutable;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\vvjs\Plugin\views\style\ViewsVanillaJavascriptSlideshow;
@@ -245,4 +248,77 @@ function _vvjs_hex_to_rgb(string $hex): array {
     'g' => hexdec(substr($hex, 2, 2)),
     'b' => hexdec(substr($hex, 4, 2)),
   ];
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function vvjs_token_info() {
+  return [
+    'tokens' => [
+      'view' => [
+        'vvjs' => [
+          'name' => t('VVJS field output'),
+          'description' => t("Use these tokens when you enable 'Use replacement tokens from the first row' in Views text areas such as the header, footer, or empty text. Use [vvjs:field_name] for rendered output, or [vvjs:field_name:plain] to strip HTML and return plain text. These tokens pull values from the first row of the View result."),
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function vvjs_tokens($type, $tokens, array $data = [], array $options = []) {
+  $replacements = [];
+
+  if (in_array($type, ['vvjs', 'global']) && isset($data['view']) && $data['view'] instanceof ViewExecutable) {
+    $view = $data['view'];
+
+    if (!empty($view->result)) {
+      $first_row = $view->result[0];
+      $field_handlers = $view->display_handler->getHandlers('field');
+
+      /** @var \Drupal\Core\Render\RendererInterface $renderer */
+      $renderer = \Drupal::service('renderer');
+
+      foreach ($tokens as $token => $name) {
+        $plain = FALSE;
+        $field_id = $token;
+
+        if (str_ends_with($token, ':plain')) {
+          $plain = TRUE;
+          $field_id = substr($token, 0, -6);
+        }
+
+        if (!isset($field_handlers[$field_id])) {
+          continue;
+        }
+
+        try {
+          $handler = $field_handlers[$field_id];
+          $value = $plain && method_exists($handler, 'advancedRenderText')
+            ? $handler->advancedRenderText($first_row)
+            : $handler->advancedRender($first_row);
+
+          if (is_array($value)) {
+            // Render safely using renderPlain to avoid LogicException.
+            $rendered = $renderer->renderPlain($value);
+          }
+          else {
+            $rendered = (string) $value;
+          }
+
+          $replacements["[vvjs:$token]"] = $plain
+            ? Html::decodeEntities(strip_tags($rendered))
+            : Markup::create($rendered);
+        }
+        catch (\Throwable $e) {
+          $replacements["[vvjs:$token]"] = '';
+        }
+      }
+    }
+  }
+
+  return $replacements;
 }

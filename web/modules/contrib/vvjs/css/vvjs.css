@@ -107,19 +107,19 @@
   left: 48px;
 }
 
-.vvjs .slide-indicators.arrows-sides {
-  opacity: 1;
-}
-
 .vvjs.arrows-top .slide-indicators {
   opacity: 0.2;
   transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .vvjs.arrows-top .slide-indicators:hover {
-  opacity: 100;
+  opacity: 1;
   outline: none;
   background-color: transparent !important;
+}
+
+.vvjs .slide-indicators.arrows-sides {
+  opacity: 1;
 }
 
 .vvjs.arrows-sides .vvjs-inner {
