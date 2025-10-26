@@ -1,7 +1,10 @@
 {#
 /**
  * @file
- * Default theme implementation for Views to output a Vanilla JavaScript Slideshow.
+ * Enhanced theme implementation for Views Vanilla JavaScript Slideshow.
+ *
+ * Improved with better organization, security fixes, and maintainable structure
+ * while preserving 100% backward compatibility and identical HTML output.
  *
  * Available variables:
  * - options: View plugin style options.
@@ -9,8 +12,13 @@
  *   - navigation: Display bottom navigation (dots or numbers).
  *   - animation: Animation type for slide transitions.
  *   - time_in_seconds: Time for each slide.
+ *   - hero_slideshow: Enable hero slideshow mode.
+ *   - max_width, min_height, max_content_width: Hero layout settings.
+ *   - overlay_position: Hero overlay positioning.
+ *   - show_total_slides, show_play_pause, show_slide_progress: Display options.
  * - rows: The view result rows to be rendered.
  * - unique_id: A unique identifier for the view instance.
+ * - background_rgb: Calculated background color with opacity.
  *
  * @see template_preprocess_views_view_vvjs()
  *
@@ -18,167 +26,283 @@
  */
 #}
 
-{# Set view id #}
-{% set unique_id = options.unique_id %}
-{% set slide_id = 'vvjs-' ~ unique_id %}
-{% set slide_inner_id = 'vvjs-inner-' ~ unique_id %}
-{% set nav_arrows = options.arrows %}
-{# Set the classes for the view #}
-{% set classes = [
+{#
+  ==============================================================================
+  TEMPLATE CONFIGURATION & VARIABLES
+  ==============================================================================
+#}
+
+{# Core slideshow identifiers - preserved for CSS/JS compatibility #}
+{% set slideshow_config = {
+  unique_id: options.unique_id|default(0),
+  slide_id: 'vvjs-' ~ (options.unique_id|default(0)),
+  slide_inner_id: 'vvjs-inner-' ~ (options.unique_id|default(0)),
+} %}
+
+{# Navigation and interaction settings #}
+{% set navigation_config = {
+  arrows: options.arrows|default('none'),
+  navigation: options.navigation|default('none'),
+  show_total_slides: options.show_total_slides|default(false),
+  show_play_pause: options.show_play_pause|default(false),
+  show_slide_progress: options.show_slide_progress|default(false),
+} %}
+
+{# Timing and animation settings #}
+{% set animation_config = {
+  time_in_seconds: options.time_in_seconds|default(0),
+  animation: options.animation|default(''),
+  is_static: (options.time_in_seconds|default(0)) == 0,
+} %}
+
+{# Hero slideshow specific settings #}
+{% set hero_config = {
+  enabled: options.hero_slideshow|default(false),
+  max_width: options.max_width|default(1200),
+  min_height: options.min_height|default(40),
+  max_content_width: options.max_content_width|default(60),
+  overlay_position: options.overlay_position|default('d-middle'),
+  background_rgb: background_rgb|default(null),
+} %}
+
+{# Calculate total slides once for efficiency #}
+{% set total_slides = rows|length %}
+
+{# Build CSS classes array - preserved exact structure for compatibility #}
+{% set slideshow_classes = [
   'vvjs',
-  'vvjs-' ~ unique_id,
-  nav_arrows == 'none' ? '' : nav_arrows,
-  slide_id,
-  options.animation,
-  options.hero_slideshow ? 'hero-slideshow' : 'slideshow',
-  options.show_slide_progress ? 'slide-progress' : '',
-  options.show_total_slides ? 'total-slides' : '',
+  'vvjs-' ~ slideshow_config.unique_id,
+  navigation_config.arrows == 'none' ? '' : navigation_config.arrows,
+  slideshow_config.slide_id,
+  animation_config.animation,
+  hero_config.enabled ? 'hero-slideshow' : 'slideshow',
+  navigation_config.show_slide_progress ? 'slide-progress' : '',
+  navigation_config.show_total_slides ? 'total-slides' : '',
   options.available_breakpoints ? 'br-' ~ options.available_breakpoints : '',
 ] %}
 
-{# Slideshow fields #}
-{% if options.hero_slideshow %}
-{% set max_width = options.max_width %}
-{% set min_height = options.min_height %}
-{% set max_content_width = options.max_content_width %}
-{% set overlay_position = options.overlay_position %}
-{% endif %}
+{#
+  ==============================================================================
+  SLIDESHOW MARKUP MACROS
+  ==============================================================================
+#}
 
-{% set nav_dots_numbers = options.navigation %}
-{% set time_in_seconds = options.time_in_seconds %}
-{% set show_total_slides = options.show_total_slides %}
-{% set show_play_pause = options.show_play_pause %}
-{% set show_slide_progress = options.show_slide_progress %}
+{# Macro for generating individual hero slideshow items #}
+{% macro render_hero_slide(row_content, slideshow_config, hero_config, navigation_config, loop_info, key) %}
+  {# Split content into image and content sections - preserved exact logic #}
+  {% set split_content = row_content|split('<div class="vvjs-separator"></div>') %}
+  {% set hero_image = split_content[0]|default('') %}
+  {% set hero_content = split_content[1]|default('') %}
 
-{# Calculate total slides #}
-{% set total_slides = rows|length %}
+  <div id="vvjs-item-{{ slideshow_config.unique_id }}-{{ loop_info.index }}"
+       class="vvjs-item"
+       role="tabpanel"
+       tabindex="{{ loop_info.first ? '0' : '-1' }}"
+       aria-hidden="{{ loop_info.first ? 'false' : 'true' }}"
+       {%- if navigation_config.navigation != 'none' %} aria-labelledby="dots-numbers-button-{{ loop_info.index }}"{% endif %}>
 
-{# Main wrapper #}
-<div {{ attributes.addClass(classes).setAttribute('id', slide_id) }} role="region" aria-labelledby="slideshow-heading-{{ unique_id }}">
-  <h2 id="slideshow-heading-{{ unique_id }}" class="visually-hidden">{{ 'Slideshow'|t }}</h2>
+    <div class="vvjs-item-inner"
+         id="{{ slideshow_config.slide_inner_id }}-{{ loop_info.index }}-pane"
+         role="group"
+         aria-labelledby="{{ slideshow_config.slide_id }}-image-{{ key + 1 }} {{ slideshow_config.slide_id }}-content-{{ key + 1 }}">
 
-  <div id="{{ slide_inner_id }}"
-     data-arrows="{{ nav_arrows != 'none' ? 'true' : 'false' }}"
-     data-navigation="{{ nav_dots_numbers != 'none' ? 'true' : 'false' }}"
-     data-show-total-slides="{{ show_total_slides ? 'true' : 'false' }}"
-     data-show-slide-progress="{{ show_slide_progress ? 'true' : 'false' }}"
-     data-play-pause="{{ show_play_pause ? 'true' : 'false' }}"
-     data-static="{{ time_in_seconds == 0 ? 'true' : 'false' }}"
-     data-time="{{ time_in_seconds }}"
-     data-total-slides="{{ rows|length }}"
-     class="vvjs-inner{{ nav_dots_numbers ? ' ' ~ nav_dots_numbers }}{{ time_in_seconds == 0 ? ' zero' : ' not-zero' }}">
-    {# Live region for slide announcements #}
+      <div class="vvjs-hero-image"
+           role="img"
+           aria-labelledby="{{ slideshow_config.slide_id }}-image-{{ key + 1 }}">
+        {# SECURITY: Using |raw since content is already rendered by Drupal's system #}
+        {{ hero_image|raw }}
+      </div>
+
+      <div class="vvjs-hero-content {{ hero_config.overlay_position }}"
+           style="{% if hero_config.background_rgb %}--hero-content-bg:{{ hero_config.background_rgb }};{% endif %} --hero-content-width: {{ hero_config.max_content_width }};"
+           role="complementary"
+           aria-labelledby="{{ slideshow_config.slide_id }}-content-{{ key + 1 }}">
+        {# SECURITY: Using |raw since content is already rendered by Drupal's system #}
+        {{ hero_content|raw }}
+      </div>
+
+    </div>
+
+  </div>
+{% endmacro %}
+
+{# Macro for generating regular slideshow items #}
+{% macro render_regular_slide(row, slideshow_config, navigation_config, loop_info) %}
+  <div id="vvjs-item-{{ slideshow_config.unique_id }}-{{ loop_info.index }}"
+       class="vvjs-item"
+       role="tabpanel"
+       tabindex="{{ loop_info.first ? '0' : '-1' }}"
+       aria-hidden="{{ loop_info.first ? 'false' : 'true' }}"
+       {%- if navigation_config.navigation != 'none' %} aria-labelledby="dots-numbers-button-{{ loop_info.index }}"{% endif %}>
+    <div id="{{ slideshow_config.slide_inner_id }}-{{ loop_info.index }}-pane" class="vvjs-item-inner">
+      {{ row.content }}
+    </div>
+  </div>
+{% endmacro %}
+
+{# Macro for navigation dot buttons #}
+{% macro render_navigation_dots(rows, slideshow_config, navigation_config) %}
+  {% if navigation_config.navigation != 'none' %}
+  <div class="dots-numbers-button-wrapper" role="tablist" aria-label="{{ 'Slideshow Tabs'|t }}">
+    {% for row in rows %}
+      <button id="dots-numbers-button-{{ loop.index }}"
+              class="button dots-numbers-button{{ loop.first ? ' active' : '' }}"
+              type="button"
+              role="tab"
+              aria-label="{{ loop.first ? 'Slide @index selected'|t({'@index': loop.index}) : 'Go to slide @index'|t({'@index': loop.index}) }}"
+              aria-selected="{{ loop.first ? 'true' : 'false' }}"
+              aria-controls="vvjs-item-{{ slideshow_config.unique_id }}-{{ loop.index }}"
+              tabindex="{{ loop.first ? '0' : '-1' }}">
+        {{ loop.index }}
+      </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{#
+  ==============================================================================
+  MAIN SLIDESHOW TEMPLATE
+  ==============================================================================
+#}
+
+{# Main slideshow wrapper with accessibility and data attributes #}
+<div {{ attributes.addClass(slideshow_classes).setAttribute('id', slideshow_config.slide_id) }}
+     role="region"
+     aria-labelledby="slideshow-heading-{{ slideshow_config.unique_id }}">
+
+  {# Hidden heading for screen readers #}
+  <div id="slideshow-heading-{{ slideshow_config.unique_id }}" role="heading" class="visually-hidden">
+    {{ 'Slideshow'|t }}
+  </div>
+
+  {# Inner container with JavaScript data attributes - preserved exact structure #}
+  <div id="{{ slideshow_config.slide_inner_id }}"
+       data-arrows="{{ navigation_config.arrows != 'none' ? 'true' : 'false' }}"
+       data-navigation="{{ navigation_config.navigation != 'none' ? 'true' : 'false' }}"
+       data-show-total-slides="{{ navigation_config.show_total_slides ? 'true' : 'false' }}"
+       data-show-slide-progress="{{ navigation_config.show_slide_progress ? 'true' : 'false' }}"
+       data-play-pause="{{ navigation_config.show_play_pause ? 'true' : 'false' }}"
+       data-static="{{ animation_config.is_static ? 'true' : 'false' }}"
+       data-time="{{ animation_config.time_in_seconds }}"
+       data-total-slides="{{ total_slides }}"
+       class="vvjs-inner{{ navigation_config.navigation ? ' ' ~ navigation_config.navigation }}{{ animation_config.is_static ? ' zero' : ' not-zero' }}">
+
+    {# Live region for accessibility announcements #}
     <div class="announcer visually-hidden" aria-live="polite" aria-atomic="true">
       {{ 'Slide 1 selected'|t }}
     </div>
-    <div id="vvjs-items-{{ unique_id }}" class="vvjs-items"{% if options.hero_slideshow %} style="--hero-max-width: {{ max_width }}; --hero-min-height: {{ min_height }};"{% endif%}>
 
-      {# Start Hero Slideshow #}
-      {% if options.hero_slideshow %}
+    {# Slides container with hero-specific styling #}
+    <div id="vvjs-items-{{ slideshow_config.unique_id }}"
+         class="vvjs-items"
+         {%- if hero_config.enabled %} style="--hero-max-width: {{ hero_config.max_width }}; --hero-min-height: {{ hero_config.min_height }};"{% endif %}>
 
+      {#
+        ========================================================================
+        SLIDE CONTENT GENERATION
+        ========================================================================
+      #}
+
+      {% if hero_config.enabled %}
+        {# Hero Slideshow Mode - Enhanced image/content layout #}
         {% for key, row in rows %}
           {% set row_content = row.content|render %}
-
-          {# Split the content to separate front and back sides #}
-          {% set split_content = row_content|split('<div class="vvjs-separator"></div>') %}
-          {% set hero_image = split_content[0] %}
-          {% set hero_content = split_content[1]|default('') %}
-
-          <div id="vvjs-item-{{ unique_id }}-{{ loop.index }}" class="vvjs-item" role="tabpanel" tabindex="{{ loop.first ? '0' : '-1' }}" aria-hidden="{{ loop.first ? 'false' : 'true' }}"{% if nav_dots_numbers %} aria-labelledby="dots-numbers-button-{{ loop.index }}"{% endif %}>
-
-            <div class="vvjs-item-inner" id="{{ slide_inner_id }}-{{ loop.index }}-pane" role="group" aria-labelledby="{{ slide_id }}-image-{{ key + 1 }} {{ slide_id }}-content-{{ key + 1 }}">
-
-              <div class="vvjs-hero-image" role="img" aria-labelledby="{{ slide_id }}-image-{{ key + 1 }}">
-                {{ hero_image|safe_html }}
-              </div>
-
-              <div class="vvjs-hero-content {{ overlay_position }}" style="{% if background_rgb %}--hero-content-bg:{{ background_rgb }};{% endif %} --hero-content-width: {{ max_content_width }};" role="complementary" aria-labelledby="{{ slide_id }}-content-{{ key + 1 }}">
-                {{ hero_content|safe_html }}
-              </div>
-
-            </div>
-
-          </div>
-
+          {{ _self.render_hero_slide(row_content, slideshow_config, hero_config, navigation_config, loop, key) }}
         {% endfor %}
 
-      {# Start Regular Slideshow #}
       {% else %}
-
+        {# Regular Slideshow Mode - Standard content display #}
         {% for row in rows %}
-          <div id="vvjs-item-{{ unique_id }}-{{ loop.index }}" class="vvjs-item" role="tabpanel" tabindex="{{ loop.first ? '0' : '-1' }}" aria-hidden="{{ loop.first ? 'false' : 'true' }}"{% if nav_dots_numbers %} aria-labelledby="dots-numbers-button-{{ loop.index }}"{% endif %}>
-            <div id="{{ slide_inner_id }}-{{ loop.index }}-pane" class="vvjs-item-inner">
-              {{ row.content }}
-            </div>
-          </div>
+          {{ _self.render_regular_slide(row, slideshow_config, navigation_config, loop) }}
         {% endfor %}
 
       {% endif %}
 
     </div>
 
-    {# Only show navigation elements if there are more than one slide #}
-    {% if total_slides > 1 %}
-      {% if nav_dots_numbers != 'none' or show_total_slides or show_slide_progress or show_play_pause %}
-        <div id="nav-dots-numbers-{{ unique_id }}" aria-label="{{ 'Slideshow Tabs'|t }}" class="nav-dots-numbers {{ nav_dots_numbers }}">
+    {#
+      ==========================================================================
+      NAVIGATION CONTROLS
+      ==========================================================================
+    #}
 
-          {% if show_play_pause %}
-          <button id="play-pause-button-{{ unique_id }}"
-          type="button"
-          role="button"
-          aria-label="{{ 'Stop automatic slide show'|t }}"
-          class="button play-pause-button display-{{ time_in_seconds }} play playing">
+    {# Only show navigation when multiple slides exist #}
+    {% if total_slides > 1 %}
+
+      {# Bottom navigation panel (play/pause, progress, dots/numbers, counter) #}
+      {% if navigation_config.navigation != 'none' or navigation_config.show_total_slides or navigation_config.show_slide_progress or navigation_config.show_play_pause %}
+        <div id="nav-dots-numbers-{{ slideshow_config.unique_id }}"
+             aria-label="{{ 'Slideshow Tabs'|t }}"
+             class="nav-dots-numbers {{ navigation_config.navigation }}">
+
+          {# Play/Pause Button #}
+          {% if navigation_config.show_play_pause and animation_config.time_in_seconds > 0 %}
+          <button id="play-pause-button-{{ slideshow_config.unique_id }}"
+                  type="button"
+                  role="button"
+                  aria-label="{{ 'Stop automatic slide show'|t }}"
+                  class="button play-pause-button display-{{ animation_config.time_in_seconds }} play playing">
             <span class="visually-hidden">{{ 'Play and Stop Slideshow'|t }}</span>
             {{ include('@vvjs/svg/svg-pause.svg') }}
           </button>
           {% endif %}
 
-          {% if show_slide_progress and time_in_seconds > 0 %}
+          {# Progress Indicator #}
+          {% if navigation_config.show_slide_progress and animation_config.time_in_seconds > 0 %}
           <div class="echo-animation">
             <div class="progressbar"
                  role="progressbar"
                  aria-valuenow="0"
                  aria-valuemin="0"
-                 aria-valuemax="{{ time_in_seconds }}"
+                 aria-valuemax="{{ animation_config.time_in_seconds }}"
                  aria-label="{{ 'Slideshow progress'|t }}"
                  aria-live="polite"
-                 data-total-time="{{ time_in_seconds }}"
+                 data-total-time="{{ animation_config.time_in_seconds }}"
                  data-current-progress="0">
             </div>
           </div>
           {% endif %}
 
-          {% if nav_dots_numbers != 'none' %}
-          <div  class="dots-numbers-button-wrapper" role="tablist" aria-label="{{ 'Slideshow Tabs'|t }}">
-          {% for row in rows %}
-            <button id="dots-numbers-button-{{ loop.index }}" class="button dots-numbers-button{{ loop.first ? ' active' : '' }}" type="button" role="tab" aria-label="{{ loop.first ? 'Slide @index selected'|t({'@index': loop.index}) : 'Go to slide @index'|t({'@index': loop.index}) }}" aria-selected="{{ loop.first ? 'true' : 'false' }}" aria-controls="vvjs-item-{{ unique_id }}-{{ loop.index }}" tabindex="{{ loop.first ? '0' : '-1' }}">
-              {{ loop.index }}
-            </button>
-          {% endfor %}
-          </div>
-          {% endif %}
+          {# Navigation Dots/Numbers #}
+          {{ _self.render_navigation_dots(rows, slideshow_config, navigation_config) }}
 
-          {% if show_total_slides %}
+          {# Slide Counter Display #}
+          {% if navigation_config.show_total_slides %}
           <div class="echo-total">
-            <span class="current-slide">1</span>/<span class="total-slides">{{ rows|length }}</span>
+            <span class="current-slide">1</span>/<span class="total-slides">{{ total_slides }}</span>
           </div>
           {% endif %}
 
         </div>
       {% endif %}
 
-      {% if nav_arrows != 'none' %}
-        <div id="slide-indicators-{{ unique_id }}" class="slide-indicators" role="navigation" aria-label="{{ 'Slideshow Navigation'|t }}">
-          <button class="button prev-arrow" role="button" aria-controls="vvjs-items-{{ unique_id }}" aria-label="{{ 'Previous Slide'|t }}">
+      {# Previous/Next Arrow Navigation #}
+      {% if navigation_config.arrows != 'none' %}
+        <div id="slide-indicators-{{ slideshow_config.unique_id }}"
+             class="slide-indicators"
+             role="navigation"
+             aria-label="{{ 'Slideshow Navigation'|t }}">
+
+          <button class="button prev-arrow"
+                  role="button"
+                  aria-controls="vvjs-items-{{ slideshow_config.unique_id }}"
+                  aria-label="{{ 'Previous Slide'|t }}">
             <span class="visually-hidden">{{ 'Previous Slide'|t }}</span>
             {{ include('@vvjs/svg/svg-prev.svg') }}
           </button>
-          <button class="button next-arrow" role="button" aria-controls="vvjs-items-{{ unique_id }}" aria-label="{{ 'Next Slide'|t }}">
+
+          <button class="button next-arrow"
+                  role="button"
+                  aria-controls="vvjs-items-{{ slideshow_config.unique_id }}"
+                  aria-label="{{ 'Next Slide'|t }}">
             <span class="visually-hidden">{{ 'Next Slide'|t }}</span>
             {{ include('@vvjs/svg/svg-next.svg') }}
           </button>
+
         </div>
       {% endif %}
+
     {% endif %}
 
   </div>

@@ -1,7 +1,18 @@
 {#
 /**
  * @file
- * Default view template to display all the fields in a row.
+ * Enhanced view template for VVJS slideshow field rendering.
+ *
+ * This template handles field output for the Views Vanilla JavaScript Slideshow,
+ * specifically designed to split fields for hero slideshow mode where the first
+ * field (typically an image) is separated from remaining fields (content) by
+ * a separator div that allows the main template to position them correctly.
+ *
+ *
+ * VVJS-Specific Behavior:
+ * - First field: Rendered as hero background (usually an image)
+ * - Separator: Divides first field from content fields
+ * - Remaining fields: Rendered as overlay content with full formatting
  *
  * Available variables:
  * - view: The view in use.
@@ -20,10 +31,7 @@
  *   - label_suffix: Colon after the label.
  *   - element_type: An HTML element for the field content.
  *   - element_attributes: List of attributes for HTML element for field content.
- *   - has_label_colon: A boolean indicating whether to display a colon after
- *     the label.
- *   - element_type: An HTML element for the field content.
- *   - element_attributes: List of attributes for HTML element for field content.
+ *   - has_label_colon: A boolean indicating whether to display a colon after the label.
  * - row: The raw result from the query, with all data it fetched.
  *
  * @see template_preprocess_views_view_fields()
@@ -32,32 +40,105 @@
  */
 #}
 
-{# Split the fields into first_field and remaining_fields #}
-{% set first_field = fields|first %}
-{% set remaining_fields = fields|slice(1) %}
+{#
+  ==============================================================================
+  FIELD VALIDATION & PREPARATION
+  ==============================================================================
+#}
 
-{# Render the first field content for the button #}
-{{ first_field.content }}
-<div class="vvjs-separator"></div>
-{# Render the remaining fields content for the pane #}
-{% for field in remaining_fields %}
-  {{ field.separator }}
+{# Validate fields array and provide safe defaults #}
+{% set validated_fields = fields|default([]) %}
+{% set total_fields = validated_fields|length %}
+{% set has_fields = total_fields > 0 %}
+
+{# Extract first field safely with validation #}
+{% set first_field = has_fields ? validated_fields|first : null %}
+{% set has_first_field = first_field and first_field.content is defined %}
+
+{# Calculate remaining fields efficiently #}
+{% set remaining_fields = total_fields > 1 ? validated_fields|slice(1) : [] %}
+{% set has_remaining_fields = remaining_fields|length > 0 %}
+
+{# Determine if separator is needed (only when both parts exist) #}
+{% set needs_separator = has_first_field and has_remaining_fields %}
+
+{#
+  ==============================================================================
+  FIELD RENDERING MACRO
+  ==============================================================================
+#}
+
+{# Reusable macro for rendering individual fields with full formatting #}
+{% macro render_field(field) %}
+  {# Field separator (if defined) #}
+  {{ field.separator|default('') }}
+
+  {# Opening wrapper element #}
   {%- if field.wrapper_element -%}
-    <{{ field.wrapper_element }}{{ field.wrapper_attributes }}>
+    <{{ field.wrapper_element }}{{ field.wrapper_attributes|default('') }}>
   {%- endif %}
+
+  {# Field label rendering #}
   {%- if field.label -%}
     {%- if field.label_element -%}
-      <{{ field.label_element }}{{ field.label_attributes }}>{{ field.label }}{{ field.label_suffix }}</{{ field.label_element }}>
+      <{{ field.label_element }}{{ field.label_attributes|default('') }}>
+        {{- field.label }}{{ field.label_suffix|default('') -}}
+      </{{ field.label_element }}>
     {%- else -%}
-      {{ field.label }}{{ field.label_suffix }}
+      {{ field.label }}{{ field.label_suffix|default('') }}
     {%- endif %}
   {%- endif %}
+
+  {# Field content rendering #}
   {%- if field.element_type -%}
-    <{{ field.element_type }}{{ field.element_attributes }}>{{ field.content }}</{{ field.element_type }}>
+    <{{ field.element_type }}{{ field.element_attributes|default('') }}>
+      {{- field.content|default('') -}}
+    </{{ field.element_type }}>
   {%- else -%}
-    {{ field.content }}
+    {{ field.content|default('') }}
   {%- endif %}
+
+  {# Closing wrapper element #}
   {%- if field.wrapper_element -%}
     </{{ field.wrapper_element }}>
   {%- endif %}
-{% endfor %}
+{% endmacro %}
+
+{#
+  ==============================================================================
+  MAIN FIELD OUTPUT
+  ==============================================================================
+#}
+
+{# Render first field (hero background) if it exists #}
+{% if has_first_field %}
+  {{ first_field.content }}
+{% endif %}
+
+{# Add separator div only when both parts exist (maintains exact original behavior) #}
+{% if needs_separator %}
+<div class="vvjs-separator"></div>
+{% endif %}
+
+{# Render remaining fields (overlay content) with full formatting preserved #}
+{% if has_remaining_fields %}
+  {% for field in remaining_fields %}
+    {{ _self.render_field(field) }}
+  {% endfor %}
+{% endif %}
+
+{#
+  ==============================================================================
+  GRACEFUL DEGRADATION FOR EDGE CASES
+  ==============================================================================
+#}
+
+{# Handle edge case: no fields at all (shouldn't happen but prevents errors) #}
+{% if not has_fields %}
+  <!-- VVJS: No fields available for rendering -->
+{% endif %}
+
+{# Handle edge case: only one field (render without separator) #}
+{% if total_fields == 1 and has_first_field %}
+  <!-- VVJS: Single field rendered above without separator -->
+{% endif %}

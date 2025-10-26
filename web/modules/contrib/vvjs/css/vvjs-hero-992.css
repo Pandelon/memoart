@@ -91,6 +91,20 @@
     bottom: 0;
   }
 
+  .vvjs.br-992 .vvjs-hero-content.d-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%!important;
+    height: 100%!important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
   .vvjs.br-992 .vvjs-hero-content.d-middle {
     position: absolute;
     top: 50%;

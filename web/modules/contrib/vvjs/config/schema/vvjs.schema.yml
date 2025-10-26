@@ -1,0 +1,86 @@
+# Views style plugin configuration schema
+views.style.views_vvjs:
+  type: views_style
+  label: 'Views Vanilla JavaScript Slideshow'
+  mapping:
+    time_in_seconds:
+      type: integer
+      label: 'Auto-advance timing in milliseconds'
+    navigation:
+      type: string
+      label: 'Navigation type'
+      constraints:
+        Choice: ['none', 'dots', 'numbers']
+    animation:
+      type: string
+      label: 'Animation type'
+      constraints:
+        Choice: ['none', 'a-zoom', 'a-fade', 'a-top', 'a-bottom', 'a-left', 'a-right']
+    arrows:
+      type: string
+      label: 'Arrow position'
+      constraints:
+        Choice: ['none', 'arrows-sides', 'arrows-sides-big', 'arrows-top', 'arrows-top-big']
+    unique_id:
+      type: integer
+      label: 'Unique identifier'
+    hero_slideshow:
+      type: boolean
+      label: 'Enable hero slideshow'
+    overlay_bg_color:
+      type: string
+      label: 'Overlay background color'
+      constraints:
+        Regex:
+          pattern: '/^#[0-9A-Fa-f]{6}$/'
+          message: 'Must be a valid hex color'
+    overlay_bg_opacity:
+      type: float
+      label: 'Overlay background opacity'
+      constraints:
+        Range:
+          min: 0
+          max: 1
+    available_breakpoints:
+      type: string
+      label: 'Available breakpoints'
+      constraints:
+        Choice: ['576', '768', '992', '1200', '1400']
+    enable_css:
+      type: boolean
+      label: 'Enable CSS library'
+    min_height:
+      type: integer
+      label: 'Minimum height in vw'
+      constraints:
+        Range:
+          min: 1
+          max: 200
+    max_content_width:
+      type: integer
+      label: 'Maximum content width percentage'
+      constraints:
+        Range:
+          min: 1
+          max: 100
+    max_width:
+      type: integer
+      label: 'Maximum width in pixels'
+      constraints:
+        Range:
+          min: 1
+          max: 9999
+    overlay_position:
+      type: string
+      label: 'Overlay position'
+      constraints:
+        Choice: ['d-full', d-middle', 'd-left', 'd-right', 'd-top', 'd-bottom', 'd-top-left', 'd-top-right', 'd-bottom-left', 'd-bottom-right', 'd-top-middle', 'd-bottom-middle']
+    show_total_slides:
+      type: boolean
+      label: 'Show total slide count'
+    show_slide_progress:
+      type: boolean
+      label: 'Show slide progress'
+    show_play_pause:
+      type: boolean
+      label: 'Show play/pause button'

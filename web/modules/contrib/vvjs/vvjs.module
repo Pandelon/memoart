@@ -5,6 +5,8 @@
  * Provides the module implementation for vvjs.
  *
  * Contains template preprocessing and theme definitions for Views.
+ * Enhanced with security improvements, better organization, and modern
+ * PHP practices.
  *
  * Filename:     vvjs.module
  * Website:      https://www.flashwebcenter.com
@@ -18,6 +20,7 @@ use Drupal\views\ViewExecutable;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\vvjs\Plugin\views\style\ViewsVanillaJavascriptSlideshow;
+use Drupal\vvjs\VvjsConstants;
 
 /**
  * Implements hook_help().
@@ -30,34 +33,67 @@ function vvjs_help($route_name, RouteMatchInterface $route_match): ?string {
 }
 
 /**
- * Helper function to render README.md.
+ * Helper function to render README.md with enhanced error handling.
  *
  * @return string
- *   The rendered content of README.md.
+ *   The rendered content of README.md or appropriate fallback message.
  */
 function _vvjs_helper_render_readme(): string {
   $readme_path = __DIR__ . '/README.md';
-  $text = file_get_contents($readme_path);
 
-  if ($text === FALSE) {
-    return t('README.md file not found.');
+  try {
+    $text = file_get_contents($readme_path);
+
+    if ($text === FALSE) {
+      \Drupal::logger('vvjs')->warning('README.md file could not be read from path: @path', [
+        '@path' => $readme_path,
+      ]);
+      return t('README.md file not found.');
+    }
+
+    if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
+      return '<pre>' . htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</pre>';
+    }
+
+    return _vvjs_render_markdown($text);
+
   }
-
-  if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
-    return '<pre>' . htmlspecialchars($text) . '</pre>';
+  catch (\Exception $e) {
+    \Drupal::logger('vvjs')->error('Error rendering README.md: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+    return t('Error loading help documentation.');
   }
+}
 
-  // Use the Markdown filter to render the README.
-  $filter_manager = \Drupal::service('plugin.manager.filter');
-  $settings = \Drupal::config('markdown.settings')->getRawData();
-  $filter = $filter_manager->createInstance('markdown', ['settings' => $settings]);
-  return $filter->process($text, 'en')->getProcessedText();
+/**
+ * Render markdown content using the markdown filter.
+ *
+ * @param string $text
+ *   The markdown text to render.
+ *
+ * @return string
+ *   The rendered HTML content.
+ */
+function _vvjs_render_markdown(string $text): string {
+  try {
+    $filter_manager = \Drupal::service('plugin.manager.filter');
+    $settings = \Drupal::config('markdown.settings')->getRawData();
+    $filter = $filter_manager->createInstance('markdown', ['settings' => $settings]);
+    return $filter->process($text, 'en')->getProcessedText();
+  }
+  catch (\Exception $e) {
+    \Drupal::logger('vvjs')->warning('Markdown processing failed: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+    return '<pre>' . htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</pre>';
+  }
 }
 
 /**
  * Implements hook_theme().
  */
-function vvjs_theme($existing, $type, $theme, $path) {
+function vvjs_theme($existing, $type, $theme, $path): array {
   return [
     'views_view_vvjs_fields' => [
       'variables' => [
@@ -90,125 +126,160 @@ function vvjs_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_preprocess_HOOK() for views_view_vvjs.
  */
-function template_preprocess_views_view_vvjs(array &$variables) {
+function template_preprocess_views_view_vvjs(array &$variables): void {
   // Load necessary views theme functions.
   \Drupal::moduleHandler()->loadInclude('views', 'inc', 'views.theme');
 
-  // Access the style plugin handler.
-  $handler = $variables['view']->style_plugin;
-
-  // Initialize list attributes array.
-  $list_attributes = [];
-
-  // Add options as data attributes.
-  if (!empty($handler->options['animation'])) {
-    $list_attributes['data-animation'] = $handler->options['animation'];
+  // Validate and extract handler safely.
+  $handler = $variables['view']->style_plugin ?? NULL;
+  if (!$handler) {
+    \Drupal::logger('vvjs')->error('Style plugin handler not found in view preprocessing.');
+    return;
   }
 
-  if (!empty($handler->options['navigation'])) {
-    $list_attributes['data-navigation'] = $handler->options['navigation'];
-  }
+  // Ensure options array exists.
+  $options = $handler->options ?? [];
 
-  if (!empty($handler->options['time_in_seconds'])) {
-    $list_attributes['data-time-in-seconds'] = $handler->options['time_in_seconds'];
-  }
+  // Build data attributes for the slideshow.
+  $variables['list_attributes'] = _vvjs_build_data_attributes($options);
 
-  if (!empty($handler->options['arrows'])) {
-    $list_attributes['data-arrows'] = $handler->options['arrows'];
-  }
+  // Calculate background RGB if color overlay is configured.
+  $variables['background_rgb'] = _vvjs_calculate_background_rgb($options);
 
-  // Unique ID for the slideshow instance.
-  if (!empty($handler->options['unique_id'])) {
-    $list_attributes['data-unique-id'] = $handler->options['unique_id'];
-  }
-
-  // Calculate and pass the background_rgb variable to the template.
-  if (!empty($handler->options['overlay_bg_color'])) {
-    $rgb = _vvjs_hex_to_rgb($handler->options['overlay_bg_color']);
-    $opacity = $handler->options['overlay_bg_opacity'] ?? 1;
-    $background_rgb = "rgba({$rgb['r']}, {$rgb['g']}, {$rgb['b']}, $opacity)";
-    $variables['background_rgb'] = $background_rgb;
-  }
-  else {
-    // Explicitly set to null if no color is chosen.
-    $variables['background_rgb'] = NULL;
-  }
-
-  if (!empty($handler->options['show_play_pause'])) {
-    $list_attributes['data-show-play-pause'] = $handler->options['show_play_pause'] ? 'true' : 'false';
-  }
-
-  if (!empty($handler->options['show_slide_progress'])) {
-    $list_attributes['data-show-slide-animation'] = $handler->options['show_slide_progress'] ? 'true' : 'false';
-  }
-
-  if (!empty($handler->options['show_total_slides'])) {
-    $list_attributes['data-show-total-slides'] = $handler->options['show_total_slides'] ? 'true' : 'false';
-  }
-
-  if (!empty($handler->options['hero_slideshow'])) {
-    $list_attributes['data-hero-slideshow'] = $handler->options['hero_slideshow'] ? 'true' : 'false';
-  }
-
-  if (!empty($handler->options['available_breakpoints'])) {
-    $list_attributes['data-available-breakpoints'] = $handler->options['available_breakpoints'];
-  }
-
-  if (isset($handler->options['enable_css'])) {
-    $list_attributes['data-enable-css'] = $handler->options['enable_css'] ? 'true' : 'false';
-  }
-
-  if (!empty($handler->options['min_height'])) {
-    $list_attributes['data-min-height'] = $handler->options['min_height'];
-  }
-
-  if (!empty($handler->options['max_content_width'])) {
-    $list_attributes['data-max-content-width'] = $handler->options['max_content_width'];
-  }
-
-  if (!empty($handler->options['max_width'])) {
-    $list_attributes['data-max-width'] = $handler->options['max_width'];
-  }
-
-  // Create an Attribute object for the list.
-  $variables['list_attributes'] = new Attribute($list_attributes);
-
-  // Pass additional settings to the template.
-  $variables['settings'] = [
-    'view_id' => $handler->view->dom_id,
-    'animation' => $handler->options['animation'],
-    'time_in_seconds' => $handler->options['time_in_seconds'],
-    'navigation' => $handler->options['navigation'],
-    'arrows' => $handler->options['arrows'],
-    'unique_id' => $handler->options['unique_id'],
-    'available_breakpoints' => $handler->options['available_breakpoints'],
-    'enable_css' => $handler->options['enable_css'],
-    'min_height' => $handler->options['min_height'],
-    'max_content_width' => $handler->options['max_content_width'],
-    'max_width' => $handler->options['max_width'],
-    'hero_slideshow' => $handler->options['hero_slideshow'],
-  ];
+  // Pass settings to template.
+  $variables['settings'] = _vvjs_build_template_settings($handler, $options);
 
   // Customize theme hook suggestions for rows.
-  if (!empty($variables['rows'])) {
-    foreach ($variables['rows'] as $key => $row) {
-      if (isset($row['#theme']) && is_array($row['#theme'])) {
-        foreach ($row['#theme'] as $idx => $theme_hook_suggestion) {
-          // Modify theme hook suggestions to use the custom theme function.
-          $variables['rows'][$key]['#theme'][$idx] = str_replace('views_view_fields', 'views_view_vvjs_fields', $theme_hook_suggestion);
-        }
-      }
-    }
-  }
+  _vvjs_customize_row_theme_suggestions($variables);
 
   // Call the default preprocess function for unformatted views.
   template_preprocess_views_view_unformatted($variables);
 }
 
 /**
- * Prepares variables for views_view_vvjs_fields template.
+ * Build data attributes array from slideshow options.
+ *
+ * @param array $options
+ *   The slideshow configuration options.
+ *
+ * @return \Drupal\Core\Template\Attribute
+ *   Attribute object containing data attributes.
  */
-function template_preprocess_views_view_vvjs_fields(array &$variables) {
+function _vvjs_build_data_attributes(array $options): Attribute {
+  $list_attributes = [];
+
+  // Process simple string/numeric data attributes.
+  foreach (VvjsConstants::DATA_ATTRIBUTE_MAP as $option_key => $data_key) {
+    if (!empty($options[$option_key])) {
+      $list_attributes[VvjsConstants::DATA_ATTRIBUTE_PREFIX . $data_key] = $options[$option_key];
+    }
+  }
+
+  // Process boolean data attributes.
+  foreach (VvjsConstants::BOOLEAN_ATTRIBUTE_MAP as $option_key => $data_key) {
+    if (isset($options[$option_key])) {
+      $list_attributes[VvjsConstants::DATA_ATTRIBUTE_PREFIX . $data_key] = $options[$option_key] ? 'true' : 'false';
+    }
+  }
+
+  return new Attribute($list_attributes);
+}
+
+/**
+ * Calculate background RGB value with opacity.
+ *
+ * @param array $options
+ *   The slideshow configuration options.
+ *
+ * @return string|null
+ *   RGBA color string or NULL if no overlay color configured.
+ */
+function _vvjs_calculate_background_rgb(array $options): ?string {
+  if (empty($options['overlay_bg_color'])) {
+    return NULL;
+  }
+
+  try {
+    $rgb = _vvjs_hex_to_rgb($options['overlay_bg_color']);
+    $opacity = $options['overlay_bg_opacity'] ?? VvjsConstants::DEFAULT_OPACITY;
+
+    // Validate opacity range.
+    $opacity = max(0, min(1, (float) $opacity));
+
+    return "rgba({$rgb['r']}, {$rgb['g']}, {$rgb['b']}, $opacity)";
+  }
+  catch (\InvalidArgumentException $e) {
+    \Drupal::logger('vvjs')->warning('Invalid overlay background color: @color', [
+      '@color' => $options['overlay_bg_color'],
+    ]);
+    return NULL;
+  }
+}
+
+/**
+ * Build template settings array.
+ *
+ * @param object $handler
+ *   The style plugin handler.
+ * @param array $options
+ *   The slideshow configuration options.
+ *
+ * @return array
+ *   Settings array for template use.
+ */
+function _vvjs_build_template_settings($handler, array $options): array {
+  $view_id = $handler->view->dom_id ?? 'unknown';
+
+  return [
+    'view_id' => $view_id,
+    'animation' => $options['animation'] ?? '',
+    'time_in_seconds' => $options['time_in_seconds'] ?? 0,
+    'navigation' => $options['navigation'] ?? '',
+    'arrows' => $options['arrows'] ?? '',
+    'unique_id' => $options['unique_id'] ?? 0,
+    'available_breakpoints' => $options['available_breakpoints'] ?? '',
+    'enable_css' => $options['enable_css'] ?? TRUE,
+    'min_height' => $options['min_height'] ?? 0,
+    'max_content_width' => $options['max_content_width'] ?? 0,
+    'max_width' => $options['max_width'] ?? 0,
+    'hero_slideshow' => $options['hero_slideshow'] ?? FALSE,
+  ];
+}
+
+/**
+ * Customize theme hook suggestions for slideshow rows.
+ *
+ * @param array $variables
+ *   Template variables array (passed by reference).
+ */
+function _vvjs_customize_row_theme_suggestions(array &$variables): void {
+  if (empty($variables['rows'])) {
+    return;
+  }
+
+  foreach ($variables['rows'] as $key => $row) {
+    if (!isset($row['#theme']) || !is_array($row['#theme'])) {
+      continue;
+    }
+
+    foreach ($row['#theme'] as $idx => $theme_hook_suggestion) {
+      // Replace views_view_fields with views_view_vvjs_fields.
+      $variables['rows'][$key]['#theme'][$idx] = str_replace(
+        'views_view_fields',
+        'views_view_vvjs_fields',
+        $theme_hook_suggestion
+      );
+    }
+  }
+}
+
+/**
+ * Prepares variables for views_view_vvjs_fields template.
+ *
+ * @param array $variables
+ *   Template variables array (passed by reference).
+ */
+function template_preprocess_views_view_vvjs_fields(array &$variables): void {
   // Load necessary views theme functions.
   \Drupal::moduleHandler()->loadInclude('views', 'inc', 'views.theme');
 
@@ -219,26 +290,43 @@ function template_preprocess_views_view_vvjs_fields(array &$variables) {
 /**
  * Implements hook_preprocess_views_view().
  */
-function vvjs_preprocess_views_view(&$variables) {
-  if ($variables['view']->style_plugin instanceof ViewsVanillaJavascriptSlideshow) {
+function vvjs_preprocess_views_view(&$variables): void {
+  if (isset($variables['view']->style_plugin) &&
+      $variables['view']->style_plugin instanceof ViewsVanillaJavascriptSlideshow) {
     // Add the custom class to the view wrapper.
     $variables['attributes']['class'][] = 'vvj-slideshow';
   }
 }
 
 /**
- * Helper function to convert hex color to RGB.
+ * Helper function to convert hex color to RGB with enhanced validation.
  *
  * @param string $hex
- *   The hex color code.
+ *   The hex color code (with or without # prefix).
  *
  * @return array
- *   An associative array with 'r', 'g', 'b' values.
+ *   An associative array with 'r', 'g', 'b' integer values.
+ *
+ * @throws \InvalidArgumentException
+ *   When the hex color is invalid.
  */
 function _vvjs_hex_to_rgb(string $hex): array {
+  // Trim whitespace and ensure we have a string.
+  $hex = trim($hex);
+
+  if (empty($hex)) {
+    throw new \InvalidArgumentException('Hex color cannot be empty');
+  }
+
+  // Remove # prefix if present.
   $hex = ltrim($hex, '#');
 
-  // Handle short hex format (e.g., #123)
+  // Validate hex color format.
+  if (!_vvjs_validate_hex_color($hex)) {
+    throw new \InvalidArgumentException("Invalid hex color format: #{$hex}");
+  }
+
+  // Handle short hex format (e.g., #123 -> #112233).
   if (strlen($hex) === 3) {
     $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
   }
@@ -251,13 +339,34 @@ function _vvjs_hex_to_rgb(string $hex): array {
 }
 
 /**
+ * Validate hex color format.
+ *
+ * @param string $hex
+ *   Hex color string without # prefix.
+ *
+ * @return bool
+ *   TRUE if valid hex color, FALSE otherwise.
+ */
+function _vvjs_validate_hex_color(string $hex): bool {
+  $length = strlen($hex);
+
+  // Must be 3 or 6 characters.
+  if ($length !== 3 && $length !== 6) {
+    return FALSE;
+  }
+
+  // Must contain only valid hex characters.
+  return ctype_xdigit($hex);
+}
+
+/**
  * Implements hook_token_info().
  */
-function vvjs_token_info() {
+function vvjs_token_info(): array {
   return [
     'tokens' => [
       'view' => [
-        'vvjs' => [
+        VvjsConstants::TOKEN_NAMESPACE => [
           'name' => t('VVJS field output'),
           'description' => t("Use these tokens when you enable 'Use replacement tokens from the first row' in Views text areas such as the header, footer, or empty text. Use [vvjs:field_name] for rendered output, or [vvjs:field_name:plain] to strip HTML and return plain text. These tokens pull values from the first row of the View result."),
         ],
@@ -269,56 +378,117 @@ function vvjs_token_info() {
 /**
  * Implements hook_tokens().
  */
-function vvjs_tokens($type, $tokens, array $data = [], array $options = []) {
+function vvjs_tokens($type, $tokens, array $data = [], array $options = []): array {
   $replacements = [];
 
-  if (in_array($type, ['vvjs', 'global']) && isset($data['view']) && $data['view'] instanceof ViewExecutable) {
-    $view = $data['view'];
+  // Validate token processing requirements.
+  if (!_vvjs_validate_token_context($type, $data)) {
+    return $replacements;
+  }
 
-    if (!empty($view->result)) {
-      $first_row = $view->result[0];
-      $field_handlers = $view->display_handler->getHandlers('field');
+  $view = $data['view'];
 
-      /** @var \Drupal\Core\Render\RendererInterface $renderer */
-      $renderer = \Drupal::service('renderer');
+  if (empty($view->result)) {
+    return $replacements;
+  }
 
-      foreach ($tokens as $token => $name) {
-        $plain = FALSE;
-        $field_id = $token;
+  try {
+    $first_row = $view->result[0];
+    $field_handlers = $view->display_handler->getHandlers('field');
+    $renderer = \Drupal::service('renderer');
 
-        if (str_ends_with($token, ':plain')) {
-          $plain = TRUE;
-          $field_id = substr($token, 0, -6);
-        }
-
-        if (!isset($field_handlers[$field_id])) {
-          continue;
-        }
-
-        try {
-          $handler = $field_handlers[$field_id];
-          $value = $plain && method_exists($handler, 'advancedRenderText')
-            ? $handler->advancedRenderText($first_row)
-            : $handler->advancedRender($first_row);
-
-          if (is_array($value)) {
-            // Render safely using renderPlain to avoid LogicException.
-            $rendered = $renderer->renderPlain($value);
-          }
-          else {
-            $rendered = (string) $value;
-          }
-
-          $replacements["[vvjs:$token]"] = $plain
-            ? Html::decodeEntities(strip_tags($rendered))
-            : Markup::create($rendered);
-        }
-        catch (\Throwable $e) {
-          $replacements["[vvjs:$token]"] = '';
-        }
+    foreach ($tokens as $token => $name) {
+      $replacement = _vvjs_process_single_token($token, $first_row, $field_handlers, $renderer);
+      if ($replacement !== NULL) {
+        $replacements["[" . VvjsConstants::TOKEN_NAMESPACE . ":$token]"] = $replacement;
       }
     }
   }
+  catch (\Exception $e) {
+    \Drupal::logger('vvjs')->error('Error processing VVJS tokens: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+  }
 
   return $replacements;
+}
+
+/**
+ * Validate token processing context.
+ *
+ * @param string $type
+ *   Token type.
+ * @param array $data
+ *   Token data array.
+ *
+ * @return bool
+ *   TRUE if context is valid for processing.
+ */
+function _vvjs_validate_token_context(string $type, array $data): bool {
+  $valid_types = [VvjsConstants::TOKEN_NAMESPACE, 'global'];
+
+  return in_array($type, $valid_types, TRUE) &&
+         isset($data['view']) &&
+         $data['view'] instanceof ViewExecutable;
+}
+
+/**
+ * Process a single token and return its replacement value.
+ *
+ * @param string $token
+ *   The token to process.
+ * @param object $first_row
+ *   The first row of view results.
+ * @param array $field_handlers
+ *   Array of field handlers.
+ * @param object $renderer
+ *   The renderer service.
+ *
+ * @return \Drupal\Component\Render\MarkupInterface|string|null
+ *   The replacement value or NULL if token cannot be processed.
+ */
+function _vvjs_process_single_token(string $token, $first_row, array $field_handlers, $renderer) {
+  $plain = FALSE;
+  $field_id = $token;
+
+  // Check for plain text modifier.
+  if (str_ends_with($token, VvjsConstants::TOKEN_PLAIN_SUFFIX)) {
+    $plain = TRUE;
+    $field_id = substr($token, 0, -strlen(VvjsConstants::TOKEN_PLAIN_SUFFIX));
+  }
+
+  // Validate field exists.
+  if (!isset($field_handlers[$field_id])) {
+    return NULL;
+  }
+
+  try {
+    $handler = $field_handlers[$field_id];
+
+    // Get field value (plain text or rendered).
+    $value = $plain && method_exists($handler, 'advancedRenderText')
+      ? $handler->advancedRenderText($first_row)
+      : $handler->advancedRender($first_row);
+
+    // Handle render arrays.
+    if (is_array($value)) {
+      $rendered = $renderer->renderPlain($value);
+    }
+    else {
+      $rendered = (string) $value;
+    }
+
+    // Return appropriate format.
+    return $plain
+      ? Html::decodeEntities(strip_tags($rendered))
+      : Markup::create($rendered);
+
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('vvjs')->warning('Token processing failed for field @field: @message', [
+      '@field' => $field_id,
+      '@message' => $e->getMessage(),
+    ]);
+    return '';
+  }
 }
