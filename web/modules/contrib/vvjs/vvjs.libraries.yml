@@ -6,6 +6,7 @@ vvjs:
     # Core slideshow functionality - must load first
     js/slideshow-core.js: { weight: -10 }
     # Individual modules - can load in any order after core
+    js/slideshow-transitions.js: { weight: -9 }
     js/slideshow-navigation.js: { weight: -9 }
     js/slideshow-accessibility.js: { weight: -9 }
     js/slideshow-progress.js: { weight: -9 }
@@ -79,11 +80,30 @@ vvjs-hero__1400:
     theme:
       css/vvjs-hero-1400.css: { }
 
-opacity:
+vvjs-opacity:
   js:
-    js/opacity.js: {}
+    js/vvjs-opacity.js: {}
   dependencies:
     - core/drupal
     - core/drupal.ajax
     - core/drupalSettings
     - core/once
+
+vvjs-admin:
+  css:
+    theme:
+      css/vvjs-admin.css: {}
+  js:
+    js/vvjs-admin.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupalSettings
+    - core/once
+
+vvjs-transitions:
+  css:
+    component:
+      css/vvjs-transitions.css: {}
+  dependencies:
+    - vvjs/vvjs

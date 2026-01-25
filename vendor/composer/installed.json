@@ -2930,18 +2930,18 @@
         },
         {
             "name": "drupal/vvjs",
-            "version": "1.0.22",
-            "version_normalized": "1.0.22.0",
+            "version": "1.0.26",
+            "version_normalized": "1.0.26.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/vvjs.git",
-                "reference": "1.0.22"
+                "reference": "1.0.26"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/vvjs-1.0.22.zip",
-                "reference": "1.0.22",
-                "shasum": "bd49b2dd4d2539f133de89baf2963408939da42c"
+                "url": "https://ftp.drupal.org/files/projects/vvjs-1.0.26.zip",
+                "reference": "1.0.26",
+                "shasum": "2062eb7592c4440ef41b7c38541ad631ce388ff8"
             },
             "require": {
                 "drupal/core": "*"
@@ -2949,8 +2949,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "1.0.22",
-                    "datestamp": "1759150605",
+                    "version": "1.0.26",
+                    "datestamp": "1764024496",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"

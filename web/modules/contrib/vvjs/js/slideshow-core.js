@@ -24,6 +24,7 @@
 
       // State
       this.slideIndex = 1;
+      this.currentSlideIndex = 1; // Track for transition events
       this.isPaused = container.dataset.static === 'true';
       this.isVisible = true;
       this.autoSlideIntervalId = null;
@@ -35,15 +36,61 @@
     init() {
       this.updateSlideVisibility();
       this.adjustHeight();
+
+      // Set initial paused class state
+      this.container.classList.toggle('vvjs-is-paused', this.isPaused);
+
+      // Listen for transition completion
+      this.container.addEventListener('vvjs:transitionComplete', () => {
+        this.updateAccessibilityAttributes();
+        this.adjustHeight();
+      });
     }
 
     /**
      * Updates slide visibility and accessibility attributes.
      */
     updateSlideVisibility() {
+      const previousIndex = this.currentSlideIndex;
+      const newIndex = this.slideIndex;
+
+      // Dispatch event BEFORE transition - transitions module handles visuals
+      this.container.dispatchEvent(new CustomEvent('vvjs:slideChanging', {
+        detail: {
+          fromIndex: previousIndex,
+          toIndex: newIndex,
+        },
+      }));
+
+      // Update current index
+      this.currentSlideIndex = newIndex;
+
+      // For instant transitions (default), update immediately
+      // For crossfade, accessibility updates happen after transition completes
+      const transitionType = this.container.dataset.transition || 'instant';
+      if (transitionType === 'instant') {
+        this.updateAccessibilityAttributes();
+        this.adjustHeight();
+      }
+    }
+
+    /**
+     * Update accessibility attributes for all slides.
+     *
+     * Called after transition completes to ensure screen readers
+     * don't announce hidden slides during crossfade.
+     */
+    updateAccessibilityAttributes() {
       this.slides.forEach((slide, index) => {
         const isActive = index + 1 === this.slideIndex;
-        slide.style.display = isActive ? 'block' : 'none';
+
+        // For instant transitions, use display
+        const transitionType = this.container.dataset.transition || 'instant';
+        if (transitionType === 'instant') {
+          slide.style.display = isActive ? 'block' : 'none';
+        }
+
+        // Accessibility attributes
         slide.setAttribute('aria-hidden', !isActive);
         slide.toggleAttribute('inert', !isActive);
         slide.classList.toggle('active', isActive);
@@ -56,7 +103,7 @@
 
       // Trigger events for other modules to respond to
       this.container.dispatchEvent(new CustomEvent('vvjs:slideChanged', {
-        detail: { slideIndex: this.slideIndex, totalSlides: this.totalSlides }
+        detail: { slideIndex: this.slideIndex, totalSlides: this.totalSlides },
       }));
     }
 
@@ -67,9 +114,31 @@
       const currentSlide = this.slides[this.slideIndex - 1];
       if (!currentSlide) return;
 
+      const transitionType = this.container.dataset.transition || 'instant';
       const computedStyle = window.getComputedStyle(this.slideshow);
-      const slideRect = currentSlide.getBoundingClientRect();
-      const contentHeight = slideRect.height;
+
+      let contentHeight;
+
+      // For crossfade, temporarily ensure slide is visible to measure
+      if (transitionType.startsWith('crossfade')) {
+        const prevOpacity = currentSlide.style.opacity;
+        const prevZIndex = currentSlide.style.zIndex;
+
+        currentSlide.style.opacity = '1';
+        currentSlide.style.zIndex = '9999';
+
+        const slideRect = currentSlide.getBoundingClientRect();
+        contentHeight = slideRect.height;
+
+        // Restore original values
+        currentSlide.style.opacity = prevOpacity;
+        currentSlide.style.zIndex = prevZIndex;
+      }
+      else {
+        // Instant transition - direct measurement
+        const slideRect = currentSlide.getBoundingClientRect();
+        contentHeight = slideRect.height;
+      }
 
       const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
       const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
@@ -140,6 +209,9 @@
      */
     togglePause() {
       this.isPaused = !this.isPaused;
+
+      // Add/remove paused class for CSS styling
+      this.container.classList.toggle('vvjs-is-paused', this.isPaused);
 
       // IMPORTANT: Dispatch event BEFORE stopping/starting to ensure immediate response
       this.container.dispatchEvent(new CustomEvent('vvjs:pauseToggled', {

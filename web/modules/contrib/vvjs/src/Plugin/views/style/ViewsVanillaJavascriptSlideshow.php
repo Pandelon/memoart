@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\vvjs\Plugin\views\style;
 
+use Drupal\views\Plugin\views\field\EntityField;
+use Drupal\vvjs\VvjsConstants;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\views\Plugin\views\style\StylePluginBase;
@@ -113,13 +117,15 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   protected ?int $cachedUniqueId = NULL;
 
   /**
-   * Set default options.
+   * {@inheritdoc}
    */
   protected function defineOptions(): array {
     $options = parent::defineOptions();
     $options['time_in_seconds'] = ['default' => self::TIMING_DEFAULT];
     $options['navigation'] = ['default' => self::NAV_DOTS];
     $options['animation'] = ['default' => self::ANIMATION_BOTTOM];
+    $options['transition_type'] = ['default' => VvjsConstants::TRANSITION_INSTANT];
+    $options['transition_duration'] = ['default' => VvjsConstants::TRANSITION_DURATION_DEFAULT];
     $options['arrows'] = ['default' => self::ARROWS_TOP];
     $options['unique_id'] = ['default' => $this->generateUniqueId()];
     $options['hero_slideshow'] = ['default' => FALSE];
@@ -134,6 +140,8 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     $options['show_total_slides'] = ['default' => FALSE];
     $options['show_slide_progress'] = ['default' => FALSE];
     $options['show_play_pause'] = ['default' => TRUE];
+    $options['enable_deeplink'] = ['default' => FALSE];
+    $options['deeplink_identifier'] = ['default' => ''];
     return $options;
   }
 
@@ -141,15 +149,13 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
-    // Call parent first to get default Drupal settings.
     parent::buildOptionsForm($form, $form_state);
 
-    // Set weights for default Drupal elements to ensure they come first.
     $this->setDefaultElementWeights($form);
-
-    // Now add your custom sections with higher weights.
     $this->buildWarningMessage($form);
     $this->buildHeroSlideshowSection($form);
+    $this->buildResponsiveSection($form);
+    $this->buildDeepLinkingSection($form);
     $this->buildTimingSection($form);
     $this->buildNavigationSection($form);
     $this->buildAnimationSection($form);
@@ -161,21 +167,17 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Set weights for default Drupal form elements to ensure proper order.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function setDefaultElementWeights(array &$form): void {
-    // Set weights for common default elements (if they exist)
     $default_elements = [
-    // Grouping settings.
       'grouping' => -100,
-    // Row CSS classes.
       'row_class' => -90,
-    // Default row class checkbox.
       'default_row_class' => -85,
-    // Uses fields checkbox.
       'uses_fields' => -80,
-    // CSS class.
       'class' => -75,
-    // Wrapper class.
       'wrapper_class' => -70,
     ];
 
@@ -188,8 +190,14 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build warning message section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildWarningMessage(array &$form): void {
+    if ($this->view->storage->id() === 'vvjs_example') {
+      return;
+    }
     $form['warning_message'] = [
       '#type' => 'markup',
       '#markup' => '<div class="messages messages--status">' . $this->t(
@@ -203,6 +211,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build hero slideshow configuration section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildHeroSlideshowSection(array &$form): void {
     $form['hero_slideshow_section'] = [
@@ -225,6 +236,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build hero layout options.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildHeroLayoutOptions(array &$form): void {
     $hero_visible_state = [
@@ -270,17 +284,13 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#max' => self::MAX_CONTENT_WIDTH,
     ];
 
-    $form['hero_slideshow_section']['layout']['available_breakpoints'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Available Breakpoints'),
-      '#options' => $this->getBreakpointOptions(),
-      '#default_value' => $this->options['available_breakpoints'] ?? self::BREAKPOINT_576,
-      '#description' => $this->t('Select the maximum screen width (in pixels) at which the Hero should be disabled.'),
-    ];
   }
 
   /**
    * Build hero overlay options.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildHeroOverlayOptions(array &$form): void {
     $hero_visible_state = [
@@ -328,6 +338,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build timing configuration section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildTimingSection(array &$form): void {
     $form['timing_section'] = [
@@ -348,6 +361,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build navigation configuration section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildNavigationSection(array &$form): void {
     $form['navigation_section'] = [
@@ -370,17 +386,20 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#title' => $this->t('Slide Indicators (Bottom Navigation Dots/Numbers)'),
       '#options' => $this->getNavigationOptions(),
       '#default_value' => $this->options['navigation'] ?? self::NAV_DOTS,
-      '#description' => $this->t('Show the bottom slide navigation dots/numbers'),
+      '#description' => $this->t('Show the bottom slide navigation dots/numbers. <strong>Note: This feature is required by Deep Linking.</strong>'),
     ];
   }
 
   /**
-   * Build animation configuration section.
+   * Build animation and transitions configuration section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildAnimationSection(array &$form): void {
     $form['animation_section'] = [
       '#type' => 'details',
-      '#title' => $this->t('Animation & Effects'),
+      '#title' => $this->t('Animation & Effects and Transitions'),
       '#open' => TRUE,
       '#weight' => -10,
     ];
@@ -390,12 +409,137 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#title' => $this->t('Slide Animation Type'),
       '#options' => $this->getAnimationOptions(),
       '#default_value' => $this->options['animation'] ?? self::ANIMATION_BOTTOM,
-      '#description' => $this->t('Choose the animation type for the slides.'),
+      '#description' => $this->t('Choose the animation type for the slides. When set to "None", transition options become available.'),
+    ];
+
+    // Transition options - only visible when animation is "none".
+    $form['animation_section']['transition_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Transition Type'),
+      '#options' => $this->getTransitionOptions(),
+      '#default_value' => $this->options['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT,
+      '#description' => $this->t('Select the transition effect between slides. Available only when Slide Animation Type is set to "None".'),
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[animation_section][animation]"]' => ['value' => self::ANIMATION_NONE],
+        ],
+      ],
+    ];
+
+    $form['animation_section']['transition_duration'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Transition Duration'),
+      '#description' => $this->t('Duration of the crossfade transition in milliseconds. Recommended: 400-800ms.'),
+      '#default_value' => $this->options['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT,
+      '#min' => VvjsConstants::TRANSITION_DURATION_MIN,
+      '#max' => VvjsConstants::TRANSITION_DURATION_MAX,
+      '#step' => 50,
+      '#field_suffix' => $this->t('ms'),
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[animation_section][animation]"]' => ['value' => self::ANIMATION_NONE],
+          ':input[name="style_options[animation_section][transition_type]"]' => [
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
+          ],
+        ],
+      ],
+    ];
+
+    $form['animation_section']['transition_help'] = [
+      '#type' => 'item',
+      '#markup' => $this->t('<div class="vvjs-transitions-help"><strong>Transition Types Explained:</strong><ul>
+        <li><strong>Instant:</strong> No transition effect (default, backward compatible)</li>
+        <li><strong>Crossfade - Classic:</strong> Both slides fade at the same speed simultaneously (most common)</li>
+        <li><strong>Crossfade - Staged:</strong> Outgoing fades quickly, incoming fades slowly with overlap (elegant, smooth)</li>
+        <li><strong>Crossfade - Dynamic:</strong> Fast fade-out, slow fade-in (energetic, attention-grabbing)</li>
+      </ul>
+      <p><strong>Performance Note:</strong> All crossfade effects use GPU-accelerated CSS transitions. Users with "prefers-reduced-motion" enabled will automatically see instant transitions.</p>
+      </div>'),
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[animation_section][animation]"]' => ['value' => self::ANIMATION_NONE],
+          ':input[name="style_options[animation_section][transition_type]"]' => [
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
+          ],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Build slide transitions section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
+   */
+  protected function buildTransitionsSection(array &$form): void {
+    $form['transitions_section'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Slide Transitions'),
+      '#description' => $this->t('Control how slides transition from one to another. Crossfade creates smooth blending between slides using CSS transitions.'),
+      '#open' => FALSE,
+      '#weight' => -9,
+    ];
+
+    $form['transitions_section']['transition_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Transition Type'),
+      '#options' => $this->getTransitionOptions(),
+      '#default_value' => $this->options['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT,
+      '#description' => $this->t('Select the transition effect between slides.'),
+    ];
+
+    $form['transitions_section']['transition_duration'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Transition Duration'),
+      '#description' => $this->t('Duration of the crossfade transition in milliseconds. Recommended: 400-800ms.'),
+      '#default_value' => $this->options['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT,
+      '#min' => VvjsConstants::TRANSITION_DURATION_MIN,
+      '#max' => VvjsConstants::TRANSITION_DURATION_MAX,
+      '#step' => 50,
+      '#field_suffix' => $this->t('ms'),
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[transitions_section][transition_type]"]' => [
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
+          ],
+        ],
+      ],
+    ];
+
+    $form['transitions_section']['transition_help'] = [
+      '#type' => 'item',
+      '#markup' => $this->t('<div class="vvjs-transitions-help"><strong>Transition Types Explained:</strong><ul>
+        <li><strong>Instant:</strong> No transition effect (default, backward compatible)</li>
+        <li><strong>Crossfade - Classic:</strong> Both slides fade at the same speed simultaneously (most common)</li>
+        <li><strong>Crossfade - Staged:</strong> Outgoing fades quickly, incoming fades slowly with overlap (elegant, smooth)</li>
+        <li><strong>Crossfade - Dynamic:</strong> Fast fade-out, slow fade-in (energetic, attention-grabbing)</li>
+      </ul>
+      <p><strong>Performance Note:</strong> All crossfade effects use GPU-accelerated CSS transitions. Users with "prefers-reduced-motion" enabled will automatically see instant transitions.</p>
+      </div>'),
+      '#states' => [
+        'visible' => [
+          ':input[name="style_options[transitions_section][transition_type]"]' => [
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
+            ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
+          ],
+        ],
+      ],
     ];
   }
 
   /**
    * Build display options section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildDisplayOptionsSection(array &$form): void {
     $form['display_section'] = [
@@ -437,6 +581,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build advanced options section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildAdvancedOptionsSection(array &$form): void {
     $form['advanced_section'] = [
@@ -448,35 +595,38 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
     $form['advanced_section']['enable_css'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Enable CSS Library'),
+      '#title' => $this->t('Enable Default CSS'),
       '#default_value' => $this->options['enable_css'] ?? TRUE,
-      '#description' => $this->t('Check this box to include the CSS library for styling the slideshow.'),
+      '#description' => $this->t('Include the default CSS library for slideshow styling. Disable if you want to provide custom styles.'),
     ];
   }
 
   /**
    * Build token documentation section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function buildTokenDocumentation(array &$form): void {
-    $form['vvjs_token_info'] = [
+    $form['token_section'] = [
       '#type' => 'details',
-      '#title' => $this->t('VVJS Tokens'),
+      '#title' => $this->t('Token Documentation'),
       '#open' => FALSE,
-      '#weight' => 20,
+      '#weight' => 100,
     ];
 
-    $form['vvjs_token_info']['description'] = [
+    $form['token_section']['description'] = [
       '#markup' => $this->t('<p>When using <em>Global: Text area</em> or <em>Global: Unfiltered text</em> in the Views header, footer, or empty text areas, the default Twig-style tokens (e.g., <code>{{ title }}</code>) will not work with the VVJS style plugin.</p>
         <p>Instead, use the custom VVJS token format to access field values from the <strong>first row</strong> of the View result:</p>
         <ul>
-          <li><code>[vvjs:field_name]</code> – The rendered output of the field (e.g., linked title, image, formatted text).</li>
-          <li><code>[vvjs:field_name:plain]</code> – A plain-text version of the field, with all HTML stripped.</li>
+          <li><code>[vvjs:field_name]</code> — The rendered output of the field (e.g., linked title, image, formatted text).</li>
+          <li><code>[vvjs:field_name:plain]</code> — A plain-text version of the field, with all HTML stripped.</li>
         </ul>
         <p>Examples:</p>
         <ul>
-          <li><code>{{ title }}</code> ➜ <code>[vvjs:title]</code></li>
-          <li><code>{{ field_image }}</code> ➜ <code>[vvjs:field_image]</code></li>
-          <li><code>{{ body }}</code> ➜ <code>[vvjs:body:plain]</code></li>
+          <li><code>{{ title }}</code> → <code>[vvjs:title]</code></li>
+          <li><code>{{ field_image }}</code> → <code>[vvjs:field_image]</code></li>
+          <li><code>{{ body }}</code> → <code>[vvjs:body:plain]</code></li>
         </ul>
         <p>These tokens offer safe and flexible field output for dynamic headings, summaries, and fallback messages in VVJS-enabled Views.</p>'),
     ];
@@ -484,10 +634,14 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Attach form assets.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
    */
   protected function attachFormAssets(array &$form): void {
     $form['#attached']['library'][] = 'core/drupal.ajax';
-    $form['#attached']['library'][] = 'vvjs/opacity';
+    $form['#attached']['library'][] = 'vvjs/vvjs-opacity';
+    $form['#attached']['library'][] = 'vvjs/vvjs-admin';
 
     $form['#attached']['drupalSettings']['vvjs'] = [
       'heroSlideshowSelector' => 'input[name="style_options[hero_slideshow_section][hero_slideshow]"]',
@@ -496,7 +650,10 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Get animation type options.
+   * Get animation options for the select list.
+   *
+   * @return array
+   *   Array of animation options.
    */
   protected function getAnimationOptions(): array {
     return [
@@ -511,7 +668,175 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Get breakpoint options.
+   * Get transition type options for the select list.
+   *
+   * @return array
+   *   Array of transition type options.
+   */
+  protected function getTransitionOptions(): array {
+    return [
+      VvjsConstants::TRANSITION_INSTANT => $this->t('Instant (no transition)'),
+      VvjsConstants::TRANSITION_CROSSFADE_CLASSIC => $this->t('Crossfade - Classic'),
+      VvjsConstants::TRANSITION_CROSSFADE_STAGED => $this->t('Crossfade - Staged (elegant)'),
+      VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC => $this->t('Crossfade - Dynamic (energetic)'),
+    ];
+  }
+
+  /**
+   * Build responsive configuration section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
+   */
+  protected function buildResponsiveSection(array &$form): void {
+    $form['responsive_section'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Responsive Settings'),
+      '#open' => TRUE,
+      // Between hero (-40) and timing (-30) so it appears near the top.
+      '#weight' => -35,
+    ];
+
+    $form['responsive_section']['available_breakpoints'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Responsive breakpoint'),
+      '#options' => $this->getBreakpointOptions(),
+      '#default_value' => $this->options['available_breakpoints'] ?? self::BREAKPOINT_576,
+      '#description' => $this->t('Select the viewport width at which the slideshow switches to its compact responsive layout.'),
+    ];
+  }
+
+  /**
+   * Build deep linking configuration section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
+   */
+  protected function buildDeepLinkingSection(array &$form): void {
+    $form['deeplink_section'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Deep Linking Settings'),
+      '#open' => TRUE,
+      '#weight' => -15,
+      '#attributes' => [
+        'data-vvjs-deeplink-section' => 'true',
+      ],
+    ];
+
+    $form['deeplink_section']['enable_deeplink'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Deep Linking'),
+      '#description' => $this->t('Enable deep linking to create shareable URLs for specific slides. <strong>Note: This feature requires navigation (dots or numbers) to be enabled.</strong>'),
+      '#default_value' => $this->options['enable_deeplink'],
+      '#attributes' => [
+        'data-vvjs-deeplink-toggle' => 'true',
+      ],
+    ];
+
+    $form['deeplink_section']['deeplink_identifier'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('URL Identifier'),
+      '#description' => $this->t('Short identifier used in slide links. Example: "gallery" creates links like #gallery-3. Will be automatically cleaned: converted to lowercase, spaces become hyphens, special characters removed.'),
+      '#default_value' => $this->options['deeplink_identifier'],
+      '#maxlength' => VvjsConstants::DEEPLINK_IDENTIFIER_MAX_LENGTH,
+      '#size' => 20,
+      '#placeholder' => 'gallery',
+      '#wrapper_attributes' => [
+        'class' => ['deeplink-identifier-wrapper'],
+        'data-vvjs-deeplink-field' => 'true',
+      ],
+      '#element_validate' => [[$this, 'validateDeeplinkIdentifier']],
+    ];
+  }
+
+  /**
+   * Validates and sanitizes the deep link identifier field.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function validateDeeplinkIdentifier(array $element, FormStateInterface $form_state): void {
+    // Get deep link values.
+    $deeplink_values = $form_state->getValue(['style_options', 'deeplink_section']) ?? [];
+    $enable_deeplink = !empty($deeplink_values['enable_deeplink']);
+    $identifier = (string) ($deeplink_values['deeplink_identifier'] ?? '');
+
+    // Get navigation setting (Slide Indicators).
+    $navigation_values = $form_state->getValue(['style_options', 'navigation_section']) ?? [];
+    $navigation = $navigation_values['navigation'] ?? self::NAV_DOTS;
+
+    // 1. If deep linking is disabled, ignore identifier and exit early.
+    if (!$enable_deeplink) {
+      // Optional: clear any stale identifier so config stays clean.
+      $form_state->setValue(['style_options', 'deeplink_section', 'deeplink_identifier'], '');
+      return;
+    }
+
+    // 2. Deep linking is enabled → require navigation ≠ none.
+    if ($navigation === self::NAV_NONE) {
+      $form_state->setError(
+        $element,
+        $this->t('Deep Linking requires Slide Indicators (Dots or Numbers) to be enabled. Please set "Slide Indicators (Bottom Navigation Dots/Numbers)" to Dots or Numbers, or disable Deep Linking.')
+      );
+      return;
+    }
+
+    // 3. From here, deep linking is enabled and navigation is valid,
+    //    so we enforce identifier rules.
+    // Required when deep linking is enabled.
+    if ($identifier === '') {
+      $form_state->setError($element, $this->t('URL Identifier is required when Deep Linking is enabled.'));
+      return;
+    }
+
+    // Transliterate and clean similar to URL aliases.
+    $transliteration = \Drupal::transliteration();
+    $clean = $transliteration->transliterate($identifier, 'en');
+
+    // Convert to lowercase.
+    $clean = strtolower($clean);
+
+    // Replace spaces and underscores with hyphens.
+    $clean = preg_replace('/[\s_]+/', '-', $clean);
+
+    // Remove all characters except letters, numbers, and hyphens.
+    $clean = preg_replace('/[^a-z0-9-]/', '', $clean);
+
+    // Remove consecutive hyphens.
+    $clean = preg_replace('/-+/', '-', $clean);
+
+    // Remove leading/trailing hyphens.
+    $clean = trim($clean, '-');
+
+    // Ensure it starts with a letter.
+    $clean = preg_replace('/^[0-9-]+/', '', $clean);
+
+    // If empty after cleaning, show error.
+    if ($clean === '') {
+      $form_state->setError($element, $this->t('URL Identifier must contain at least one letter.'));
+      return;
+    }
+
+    // Check reserved words.
+    if (in_array($clean, VvjsConstants::DEEPLINK_RESERVED_WORDS, TRUE)) {
+      $form_state->setError(
+        $element,
+        $this->t('Please choose a more specific identifier. "@identifier" is a reserved word.', ['@identifier' => $clean])
+      );
+      return;
+    }
+
+    // Set the cleaned value back to form state.
+    $form_state->setValue(['style_options', 'deeplink_section', 'deeplink_identifier'], $clean);
+  }
+
+  /**
+   * Get breakpoint options for the select list.
+   *
+   * @return array
+   *   Array of breakpoint options.
    */
   protected function getBreakpointOptions(): array {
     return [
@@ -524,7 +849,10 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Get arrow position options.
+   * Get arrow options for the select list.
+   *
+   * @return array
+   *   Array of arrow options.
    */
   protected function getArrowOptions(): array {
     return [
@@ -537,7 +865,10 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Get navigation options.
+   * Get navigation options for the select list.
+   *
+   * @return array
+   *   Array of navigation options.
    */
   protected function getNavigationOptions(): array {
     return [
@@ -548,7 +879,10 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Get overlay position options.
+   * Get overlay position options for the select list.
+   *
+   * @return array
+   *   Array of overlay position options.
    */
   protected function getOverlayPositionOptions(): array {
     return [
@@ -568,7 +902,10 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Get timing options.
+   * Get timing options for the select list.
+   *
+   * @return array
+   *   Array of timing options.
    */
   protected function getTimingOptions(): array {
     return [
@@ -591,38 +928,34 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
-   * Generates a deterministic unique ID for the view display.
+   * {@inheritdoc}
    */
-  protected function generateUniqueId(): int {
-    if ($this->cachedUniqueId === NULL) {
-      $identifier = ($this->view->id() ?? 'unknown') . '_' . ($this->view->current_display ?? 'default');
-      $this->cachedUniqueId = (int) abs(crc32($identifier));
+  public function validateOptionsForm(&$form, FormStateInterface $form_state): void {
+    parent::validateOptionsForm($form, $form_state);
 
-      // Ensure 8-digit number like original.
-      if ($this->cachedUniqueId < 10000000) {
-        $this->cachedUniqueId += 10000000;
-      }
-      if ($this->cachedUniqueId > 99999999) {
-        $this->cachedUniqueId = $this->cachedUniqueId % 90000000 + 10000000;
-      }
+    $errors = $this->validateFormValues($form_state);
+    foreach ($errors as $error) {
+      $form_state->setError($form, $error);
     }
-
-    return $this->cachedUniqueId;
   }
 
   /**
    * Validate form input values.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   *
+   * @return array
+   *   Array of validation error messages.
    */
   protected function validateFormValues(FormStateInterface $form_state): array {
     $errors = [];
     $values = $form_state->getValues();
 
-    // Extract values from nested form structure.
     $hero_values = $values['style_options']['hero_slideshow_section'] ?? [];
     $timing_values = $values['style_options']['timing_section'] ?? [];
     $display_values = $values['style_options']['display_section'] ?? [];
 
-    // Validate numeric ranges.
     if (isset($hero_values['layout']['max_width'])) {
       $max_width = (int) $hero_values['layout']['max_width'];
       if ($max_width < self::MIN_WIDTH || $max_width > self::MAX_WIDTH) {
@@ -653,7 +986,6 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       }
     }
 
-    // Validate hex color.
     if (isset($hero_values['overlay']['overlay_bg_color'])) {
       $color = $hero_values['overlay']['overlay_bg_color'];
       if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color)) {
@@ -661,7 +993,6 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       }
     }
 
-    // Validate opacity.
     if (isset($hero_values['overlay']['overlay_bg_opacity'])) {
       $opacity = (float) $hero_values['overlay']['overlay_bg_opacity'];
       if ($opacity < 0 || $opacity > 1) {
@@ -669,7 +1000,6 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       }
     }
 
-    // Validate timing dependencies.
     $timing = $timing_values['time_in_seconds'] ?? '0';
     if ($timing === '0') {
       if (!empty($display_values['show_slide_progress'])) {
@@ -684,12 +1014,29 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function submitOptionsForm(&$form, FormStateInterface $form_state): void {
+    $values = $form_state->getValue('style_options', []);
+    $flattened_values = $this->flattenFormValues($values);
+
+    $form_state->setValue('style_options', $flattened_values);
+
+    parent::submitOptionsForm($form, $form_state);
+  }
+
+  /**
    * Flatten nested form values to match original structure.
+   *
+   * @param array $values
+   *   Nested form values.
+   *
+   * @return array
+   *   Flattened values array.
    */
   protected function flattenFormValues(array $values): array {
     $flattened = [];
 
-    // Hero slideshow values.
     if (isset($values['hero_slideshow_section'])) {
       $hero = $values['hero_slideshow_section'];
       $flattened['hero_slideshow'] = $hero['hero_slideshow'] ?? FALSE;
@@ -698,7 +1045,6 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
         $flattened['max_width'] = $hero['layout']['max_width'] ?? self::DEFAULT_MAX_WIDTH;
         $flattened['min_height'] = $hero['layout']['min_height'] ?? self::DEFAULT_MIN_HEIGHT;
         $flattened['max_content_width'] = $hero['layout']['max_content_width'] ?? self::DEFAULT_CONTENT_WIDTH;
-        $flattened['available_breakpoints'] = $hero['layout']['available_breakpoints'] ?? self::BREAKPOINT_576;
       }
 
       if (isset($hero['overlay'])) {
@@ -708,23 +1054,40 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       }
     }
 
-    // Timing values.
+    if (isset($values['responsive_section']['available_breakpoints'])) {
+      $flattened['available_breakpoints'] = $values['responsive_section']['available_breakpoints'] ?? self::BREAKPOINT_576;
+    }
+
+    if (isset($values['deeplink_section'])) {
+      $flattened['enable_deeplink'] = $values['deeplink_section']['enable_deeplink'] ?? FALSE;
+      $flattened['deeplink_identifier'] = $values['deeplink_section']['deeplink_identifier'] ?? '';
+    }
+
     if (isset($values['timing_section'])) {
       $flattened['time_in_seconds'] = $values['timing_section']['time_in_seconds'] ?? self::TIMING_DEFAULT;
     }
 
-    // Navigation values.
     if (isset($values['navigation_section'])) {
       $flattened['arrows'] = $values['navigation_section']['arrows'] ?? self::ARROWS_TOP;
       $flattened['navigation'] = $values['navigation_section']['navigation'] ?? self::NAV_DOTS;
     }
 
-    // Animation values.
     if (isset($values['animation_section'])) {
-      $flattened['animation'] = $values['animation_section']['animation'] ?? self::ANIMATION_BOTTOM;
+      $animation = $values['animation_section']['animation'] ?? self::ANIMATION_BOTTOM;
+      $flattened['animation'] = $animation;
+
+      // Only preserve transition values when animation is "none".
+      if ($animation === self::ANIMATION_NONE) {
+        $flattened['transition_type'] = $values['animation_section']['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT;
+        $flattened['transition_duration'] = $values['animation_section']['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT;
+      }
+      else {
+        // Clear transition values when animation is not "none".
+        $flattened['transition_type'] = VvjsConstants::TRANSITION_INSTANT;
+        $flattened['transition_duration'] = VvjsConstants::TRANSITION_DURATION_DEFAULT;
+      }
     }
 
-    // Display values.
     if (isset($values['display_section'])) {
       $display = $values['display_section'];
       $flattened['show_total_slides'] = $display['show_total_slides'] ?? FALSE;
@@ -732,36 +1095,43 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       $flattened['show_play_pause'] = $display['show_play_pause'] ?? TRUE;
     }
 
-    // Advanced values.
     if (isset($values['advanced_section'])) {
       $flattened['enable_css'] = $values['advanced_section']['enable_css'] ?? TRUE;
     }
 
-    // Preserve unique_id.
     $flattened['unique_id'] = $this->options['unique_id'] ?? $this->generateUniqueId();
 
     return $flattened;
   }
 
   /**
-   * {@inheritdoc}
+   * Generates a unique numeric ID for the view display.
+   *
+   * @return int
+   *   A unique ID between 10000000 and 99999999.
+   *
+   * @throws \Exception
+   *   If an appropriate source of randomness cannot be found.
    */
-  public function submitOptionsForm(&$form, FormStateInterface $form_state): void {
-    // Flatten nested form values to match original structure.
-    $values = $form_state->getValue('style_options', []);
-    $flattened_values = $this->flattenFormValues($values);
+  protected function generateUniqueId(): int {
+    if ($this->cachedUniqueId !== NULL) {
+      return $this->cachedUniqueId;
+    }
 
-    // Update form state with flattened values.
-    $form_state->setValue('style_options', $flattened_values);
+    $this->cachedUniqueId = random_int(10000000, 99999999);
 
-    parent::submitOptionsForm($form, $form_state);
+    if ($this->cachedUniqueId < 10000000) {
+      $this->cachedUniqueId += 10000000;
+    }
+    if ($this->cachedUniqueId > 99999999) {
+      $this->cachedUniqueId = $this->cachedUniqueId % 90000000 + 10000000;
+    }
+
+    return $this->cachedUniqueId;
   }
 
   /**
-   * Renders the view with the slideshow style.
-   *
-   * @return array
-   *   A render array for the slideshow.
+   * {@inheritdoc}
    */
   public function render(): array {
     $rows = [];
@@ -793,6 +1163,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * Build the list of libraries to attach.
+   *
+   * @return array
+   *   An array of library names to attach.
    */
   protected function buildLibraryList(): array {
     $libraries = [
@@ -809,6 +1182,12 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       $libraries[] = 'vvjs/vvjs-style';
     }
 
+    // Add transitions library if crossfade is enabled.
+    $transitionType = $this->options['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT;
+    if (str_starts_with($transitionType, 'crossfade')) {
+      $libraries[] = 'vvjs/vvjs-transitions';
+    }
+
     return $libraries;
   }
 
@@ -818,12 +1197,51 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   public function validate(): array {
     $errors = parent::validate();
 
-    // Validate hero slideshow requirements.
-    if (!empty($this->options['hero_slideshow']) && !$this->usesFields()) {
-      $errors[] = $this->t('Hero Slideshow option requires Fields as row style.');
+    if (!empty($this->options['hero_slideshow'])) {
+      // Check if using fields.
+      if (!$this->usesFields()) {
+        $errors[] = $this->t('Hero Slideshow option requires Fields as row style.');
+      }
+      else {
+        // Check if first field is an image.
+        $fields = $this->view->display_handler->getHandlers('field');
+
+        if (empty($fields)) {
+          $errors[] = $this->t('Hero Slideshow requires at least one field to be configured.');
+        }
+        else {
+          $first_field = reset($fields);
+          $is_image = FALSE;
+
+          // Check if it's an EntityField (not a global or custom field).
+          if ($first_field instanceof EntityField) {
+            // Get field name from the field's definition.
+            $field_name = $first_field->definition['field_name'] ?? NULL;
+
+            if ($field_name) {
+              // Get the entity type from the view.
+              $entity_type_id = $this->view->getBaseEntityType()->id();
+
+              // Use entity field manager service to get
+              // field storage definitions.
+              $entity_field_manager = \Drupal::service('entity_field.manager');
+              $field_storage_definitions = $entity_field_manager->getFieldStorageDefinitions($entity_type_id);
+
+              // Check if this field exists and is an image type.
+              if (isset($field_storage_definitions[$field_name])) {
+                $field_type = $field_storage_definitions[$field_name]->getType();
+                $is_image = ($field_type === 'image');
+              }
+            }
+          }
+
+          if (!$is_image) {
+            $errors[] = $this->t('Hero Slideshow requires the first field to be an Image field. Please add an image field as the first field in your Fields configuration.');
+          }
+        }
+      }
     }
 
-    // Validate timing and display option dependencies.
     $timing = $this->options['time_in_seconds'] ?? '0';
     if ($timing === '0') {
       if (!empty($this->options['show_slide_progress'])) {

@@ -59,7 +59,7 @@
         // IMMEDIATE: Stop progress before toggling core state
         const modules = this.container.vvjsModules;
         if (modules && modules.progress && !this.core.isPaused) {
-          modules.progress.clearProgress();
+          modules.progress.resetProgress();
         }
 
         this.core.togglePause();

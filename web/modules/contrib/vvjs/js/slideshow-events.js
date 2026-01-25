@@ -3,6 +3,7 @@
  * Slideshow user interaction events.
  *
  * Handles touch gestures, mouse interactions, and other user input events.
+ * Uses Pointer Events API as primary input with Touch Events fallback.
  */
 
 ((Drupal) => {
@@ -17,13 +18,13 @@
       this.core = slideshowCore;
       this.slideshow = container.querySelector('.vvjs-items');
 
-      // Touch/swipe state
-      this.touchStartX = 0;
-      this.touchStartY = 0;
-      this.touchEndX = 0;
-      this.touchEndY = 0;
+      // Touch/swipe state (null = not tracking, allows valid 0,0 coordinates).
+      this.touchStartX = null;
+      this.touchStartY = null;
+      this.touchEndX = null;
+      this.touchEndY = null;
       this.isDragging = false;
-      this.dragThreshold = 50; // Minimum distance for swipe
+      this.dragThreshold = 40;
 
       // Mouse state
       this.isMouseOver = false;
@@ -36,129 +37,203 @@
     }
 
     init() {
-      this.setupTouchEvents();
+      // Prefer Pointer Events API (97%+ browser support).
+      // Fall back to Touch Events for legacy browsers only.
+      if ('PointerEvent' in window) {
+        this.setupPointerEvents();
+      }
+      else {
+        this.setupTouchEvents();
+      }
+
+      // Mouse events for hover pause functionality.
       this.setupMouseEvents();
-      this.setupPointerEvents();
     }
 
     /**
-     * Set up touch event handlers for swipe gestures.
+     * Set up pointer event handlers (modern unified input API).
+     */
+    setupPointerEvents() {
+      if (!this.slideshow) {
+        return;
+      }
+
+      // Pointer down - start tracking.
+      this.slideshow.addEventListener('pointerdown', (e) => {
+        this.handlePointerDown(e);
+      });
+
+      // Pointer move - must be non-passive to allow preventDefault().
+      this.slideshow.addEventListener('pointermove', (e) => {
+        this.handlePointerMove(e);
+      }, { passive: false });
+
+      // Pointer up - process gesture.
+      this.slideshow.addEventListener('pointerup', (e) => {
+        this.handlePointerUp(e);
+      });
+
+      // Pointer cancel - reset state.
+      this.slideshow.addEventListener('pointercancel', () => {
+        this.resetTouchState();
+      });
+
+    }
+
+    /**
+     * Set up touch event handlers (fallback for legacy browsers).
      */
     setupTouchEvents() {
-      if (!this.slideshow) return;
+      if (!this.slideshow) {
+        return;
+      }
 
-      // Touch start
+      // Touch start.
       this.slideshow.addEventListener('touchstart', (e) => {
         this.handleTouchStart(e);
       }, { passive: true });
 
-      // Touch move
+      // Touch move - must be non-passive to allow preventDefault().
       this.slideshow.addEventListener('touchmove', (e) => {
         this.handleTouchMove(e);
-      }, { passive: true });
+      }, { passive: false });
 
-      // Touch end
+      // Touch end.
       this.slideshow.addEventListener('touchend', (e) => {
         this.handleTouchEnd(e);
       }, { passive: true });
 
-      // Touch cancel
-      this.slideshow.addEventListener('touchcancel', (e) => {
-        this.handleTouchCancel(e);
+      // Touch cancel.
+      this.slideshow.addEventListener('touchcancel', () => {
+        this.resetTouchState();
       });
     }
 
     /**
-     * Set up mouse event handlers.
+     * Set up mouse event handlers for hover functionality.
      */
     setupMouseEvents() {
-      if (!this.slideshow) return;
+      if (!this.slideshow) {
+        return;
+      }
 
-      // Mouse enter - pause slideshow
+      // Mouse enter - pause slideshow.
       this.slideshow.addEventListener('mouseenter', () => {
         this.handleMouseEnter();
       });
 
-      // Mouse leave - resume slideshow
+      // Mouse leave - resume slideshow.
       this.slideshow.addEventListener('mouseleave', () => {
         this.handleMouseLeave();
       });
-
-      // Mouse down for potential drag
-      this.slideshow.addEventListener('mousedown', (e) => {
-        this.handleMouseDown(e);
-      });
-
-      // Mouse move for drag detection
-      this.slideshow.addEventListener('mousemove', (e) => {
-        this.handleMouseMove(e);
-      });
-
-      // Mouse up
-      this.slideshow.addEventListener('mouseup', (e) => {
-        this.handleMouseUp(e);
-      });
     }
 
     /**
-     * Set up pointer events for unified touch/mouse handling.
+     * Handle pointer move event.
      */
-    setupPointerEvents() {
-      // Modern browsers support pointer events
-      if ('PointerEvent' in window && this.slideshow) {
-        this.slideshow.addEventListener('pointerdown', (e) => {
-          this.handlePointerDown(e);
-        });
-
-        this.slideshow.addEventListener('pointermove', (e) => {
-          this.handlePointerMove(e);
-        });
-
-        this.slideshow.addEventListener('pointerup', (e) => {
-          this.handlePointerUp(e);
-        });
+    handlePointerMove(e) {
+      if (!this.swipeEnabled) {
+        return;
       }
-    }
 
-    /**
-     * Handle touch start event.
-     */
-    handleTouchStart(e) {
-      if (!this.swipeEnabled) return;
+      // Only track touch and pen input.
+      if (e.pointerType === 'mouse') {
+        return;
+      }
 
-      const touch = e.touches[0];
-      this.touchStartX = touch.clientX;
-      this.touchStartY = touch.clientY;
-      this.isDragging = false;
+      // Skip if no start position recorded (no pointerdown received).
+      if (this.touchStartX === null || this.touchStartY === null) {
+        return;
+      }
 
-      // Store reference on slideshow element for compatibility
-      this.slideshow._touchStartX = touch.clientX;
-      this.slideshow._touchStartY = touch.clientY;
-    }
+      const deltaX = Math.abs(e.clientX - this.touchStartX);
+      const deltaY = Math.abs(e.clientY - this.touchStartY);
 
-    /**
-     * Handle touch move event.
-     */
-    handleTouchMove(e) {
-      if (!this.swipeEnabled) return;
-
-      const touch = e.touches[0];
-      const deltaX = Math.abs(touch.clientX - this.touchStartX);
-      const deltaY = Math.abs(touch.clientY - this.touchStartY);
-
-      // Determine if this is a horizontal swipe
+      // Determine if this is a horizontal swipe.
       if (deltaX > deltaY && deltaX > 10) {
         this.isDragging = true;
-        // Prevent default to stop scrolling
+        // Prevent default to stop scrolling during horizontal swipe.
         e.preventDefault();
       }
     }
 
     /**
-     * Handle touch end event.
+     * Handle pointer down event.
+     */
+    handlePointerDown(e) {
+      if (!this.swipeEnabled || e.pointerType === 'mouse') {
+        return;
+      }
+
+      if (this.slideshow.setPointerCapture) {
+        this.slideshow.setPointerCapture(e.pointerId);
+      }
+
+      this.touchStartX = e.clientX;
+      this.touchStartY = e.clientY;
+      this.isDragging = false;
+    }
+
+    /**
+     * Handle pointer up event.
+     */
+    handlePointerUp(e) {
+      if (!this.swipeEnabled || e.pointerType === 'mouse') {
+        return;
+      }
+
+      if (this.slideshow.releasePointerCapture) {
+        this.slideshow.releasePointerCapture(e.pointerId);
+      }
+
+      this.touchEndX = e.clientX;
+      this.touchEndY = e.clientY;
+
+      this.processSwipeGesture();
+      this.resetTouchState();
+    }
+
+    /**
+     * Handle touch start event (legacy fallback).
+     */
+    handleTouchStart(e) {
+      if (!this.swipeEnabled) {
+        return;
+      }
+
+      const touch = e.touches[0];
+      this.touchStartX = touch.clientX;
+      this.touchStartY = touch.clientY;
+      this.isDragging = false;
+    }
+
+    /**
+     * Handle touch move event (legacy fallback).
+     */
+    handleTouchMove(e) {
+      if (!this.swipeEnabled) {
+        return;
+      }
+
+      const touch = e.touches[0];
+      const deltaX = Math.abs(touch.clientX - this.touchStartX);
+      const deltaY = Math.abs(touch.clientY - this.touchStartY);
+
+      // Determine if this is a horizontal swipe.
+      if (deltaX > deltaY && deltaX > 10) {
+        this.isDragging = true;
+        // Prevent default to stop scrolling during horizontal swipe.
+        e.preventDefault();
+      }
+    }
+
+    /**
+     * Handle touch end event (legacy fallback).
      */
     handleTouchEnd(e) {
-      if (!this.swipeEnabled) return;
+      if (!this.swipeEnabled) {
+        return;
+      }
 
       const touch = e.changedTouches[0];
       this.touchEndX = touch.clientX;
@@ -169,33 +244,27 @@
     }
 
     /**
-     * Handle touch cancel event.
-     */
-    handleTouchCancel(e) {
-      this.resetTouchState();
-    }
-
-    /**
      * Process swipe gesture and trigger navigation.
      */
     processSwipeGesture() {
       const deltaX = this.touchEndX - this.touchStartX;
       const deltaY = Math.abs(this.touchEndY - this.touchStartY);
 
-      // Only process if horizontal movement is significant and vertical is minimal
-      if (Math.abs(deltaX) > this.dragThreshold && deltaY < this.dragThreshold * 0.5) {
+      // Only process if horizontal movement is significant and vertical is minimal.
+      if (Math.abs(deltaX) > this.dragThreshold && deltaY < this.dragThreshold * 1.5) {
         if (deltaX > 0) {
-          // Swipe right - previous slide
+          // Swipe right - previous slide.
           this.core.prevSlide();
-        } else {
-          // Swipe left - next slide
+        }
+        else {
+          // Swipe left - next slide.
           this.core.nextSlide();
         }
 
-        // Restart auto-advance
+        // Restart auto-advance.
         this.core.startAutoSlide();
 
-        // Dispatch custom event
+        // Dispatch custom event.
         this.container.dispatchEvent(new CustomEvent('vvjs:swipe', {
           detail: {
             direction: deltaX > 0 ? 'right' : 'left',
@@ -209,10 +278,10 @@
      * Reset touch state.
      */
     resetTouchState() {
-      this.touchStartX = 0;
-      this.touchStartY = 0;
-      this.touchEndX = 0;
-      this.touchEndY = 0;
+      this.touchStartX = null;
+      this.touchStartY = null;
+      this.touchEndX = null;
+      this.touchEndY = null;
       this.isDragging = false;
     }
 
@@ -223,7 +292,7 @@
       if (this.pauseOnHover) {
         this.isMouseOver = true;
 
-        // IMMEDIATE: Stop progress before stopping auto-slide
+        // IMMEDIATE: Stop progress before stopping auto-slide.
         const modules = this.container.vvjsModules;
         if (modules && modules.progress) {
           modules.progress.immediateStop();
@@ -244,67 +313,6 @@
         this.core.startAutoSlide();
 
         this.container.dispatchEvent(new CustomEvent('vvjs:mouseLeave'));
-      }
-    }
-
-    /**
-     * Handle mouse down event.
-     */
-    handleMouseDown(e) {
-      // Could be used for mouse drag gestures
-      this.touchStartX = e.clientX;
-      this.touchStartY = e.clientY;
-    }
-
-    /**
-     * Handle mouse move event.
-     */
-    handleMouseMove(e) {
-      // Could be used for mouse drag detection
-      if (this.isDragging) {
-        // Handle mouse drag if enabled
-      }
-    }
-
-    /**
-     * Handle mouse up event.
-     */
-    handleMouseUp(e) {
-      // Could be used to end mouse drag gesture
-      this.touchEndX = e.clientX;
-      this.touchEndY = e.clientY;
-    }
-
-    /**
-     * Handle pointer down event.
-     */
-    handlePointerDown(e) {
-      if (e.pointerType === 'touch') {
-        this.handleTouchStart(e);
-      } else if (e.pointerType === 'mouse') {
-        this.handleMouseDown(e);
-      }
-    }
-
-    /**
-     * Handle pointer move event.
-     */
-    handlePointerMove(e) {
-      if (e.pointerType === 'touch') {
-        this.handleTouchMove(e);
-      } else if (e.pointerType === 'mouse') {
-        this.handleMouseMove(e);
-      }
-    }
-
-    /**
-     * Handle pointer up event.
-     */
-    handlePointerUp(e) {
-      if (e.pointerType === 'touch') {
-        this.handleTouchEnd(e);
-      } else if (e.pointerType === 'mouse') {
-        this.handleMouseUp(e);
       }
     }
 
@@ -360,12 +368,12 @@
      */
     destroy() {
       // Event listeners will be automatically removed when the container is destroyed
-      // but we could add explicit cleanup here if needed
+      // but we could add explicit cleanup here if needed.
       this.resetTouchState();
     }
   }
 
-  // Export to global namespace
+  // Export to global namespace.
   Drupal.vvjs = Drupal.vvjs || {};
   Drupal.vvjs.SlideshowEvents = SlideshowEvents;
 

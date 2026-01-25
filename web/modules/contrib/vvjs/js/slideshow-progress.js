@@ -37,11 +37,21 @@
 
       // IMMEDIATE: Add direct pause listener to container for instant response
       this.container.addEventListener('click', (e) => {
-        if (e.target.closest('.play-pause-button')) {
-          // Stop progress IMMEDIATELY when pause button is clicked
+        const playPauseButton = e.target.closest('.play-pause-button');
+        if (!playPauseButton) {
+          return;
+        }
+
+        // At this point, SlideshowCore.togglePause() has already run
+        // (Navigation handler fires on the button, then this runs on the container).
+        // So core.isPaused now reflects the *new* state:
+        //   - After a PAUSE click:  isPaused === true  → OK to force-stop
+        //   - After a PLAY click:   isPaused === false → DO NOT kill the new interval
+        if (this.core.isPaused) {
           this.immediateStop();
         }
       });
+
 
       // IMMEDIATE: Add direct mouse event listeners for instant hover response
       const slideshow = this.container.querySelector('.vvjs-items');
@@ -83,8 +93,14 @@
      * Bind event listeners.
      */
     bindEvents() {
-      // Listen for slide changes to restart progress
-      this.container.addEventListener('vvjs:slideChanged', () => {
+      // CRITICAL: Start progress WHEN slide starts changing (not after transition)
+      // The slideTime includes the transition duration, so progress should count
+      // from the moment the transition begins, not after it completes.
+      this.container.addEventListener('vvjs:slideChanging', () => {
+        // Immediately stop the old progress
+        this.immediateStop();
+        
+        // Start new progress immediately (counts during transition)
         if (!this.core.isPaused) {
           this.startProgress();
         }
@@ -95,7 +111,7 @@
         if (e.detail.isPaused) {
           this.immediateStop(); // Use immediate stop
         } else {
-          this.resumeProgress();
+          this.startProgress();
         }
       });
 

@@ -35,6 +35,7 @@
     validateDependencies() {
       const requiredModules = [
         'SlideshowCore',
+        'SlideshowTransitions',
         'SlideshowNavigation',
         'SlideshowAccessibility',
         'SlideshowProgress',
@@ -54,6 +55,12 @@
       try {
         // Initialize core first
         this.modules.core = new Drupal.vvjs.SlideshowCore(this.container);
+
+        // Initialize transitions module second (handles visual transitions)
+        this.modules.transitions = new Drupal.vvjs.SlideshowTransitions(
+          this.container,
+          this.modules.core
+        );
 
         // Initialize dependent modules
         this.modules.navigation = new Drupal.vvjs.SlideshowNavigation(
@@ -83,6 +90,9 @@
 
         // IMPORTANT: Store module references on container for cross-module communication
         this.container.vvjsModules = this.modules;
+
+        // Initialize deep linking if enabled - may activate a slide from URL
+        const deepLinkActivated = this.initializeDeepLinking();
 
         // Start the slideshow
         this.modules.core.startAutoSlide();
@@ -204,6 +214,71 @@
         }));
       }
     }
+
+    /**
+     * Initialize deep linking functionality.
+     * 
+     * Checks URL hash on page load and navigates to the specified slide.
+     * Also sets up hash change listener for browser back/forward.
+     */
+    initializeDeepLinking() {
+      const deeplinkEnabled = this.container.dataset.deeplinkEnabled === 'true';
+      const deeplinkId = this.container.dataset.deeplinkId;
+
+      if (!deeplinkEnabled || !deeplinkId) {
+        return false;
+      }
+
+      // Check URL hash on page load
+      let slideActivated = false;
+      const hash = window.location.hash;
+      
+      if (hash && hash.startsWith(`#${deeplinkId}-`)) {
+        const slideNumber = parseInt(hash.split('-').pop(), 10);
+        
+        if (slideNumber >= 1 && slideNumber <= this.modules.core.totalSlides) {
+          // Navigate to the slide from URL
+          this.modules.core.goToSlide(slideNumber);
+          slideActivated = true;
+        }
+      }
+
+      // Set up hash change listener (only once per slideshow)
+      if (!this.container.vvjsHashChangeHandler) {
+        const hashChangeHandler = () => {
+          const currentHash = window.location.hash;
+          
+          // Only respond to hash changes for this specific slideshow
+          if (currentHash && currentHash.startsWith(`#${deeplinkId}-`)) {
+            const slideNumber = parseInt(currentHash.split('-').pop(), 10);
+            
+            if (slideNumber >= 1 && slideNumber <= this.modules.core.totalSlides) {
+              this.modules.core.goToSlide(slideNumber);
+              this.modules.core.startAutoSlide();
+            }
+          }
+        };
+
+        this.container.vvjsHashChangeHandler = hashChangeHandler;
+        window.addEventListener('hashchange', hashChangeHandler);
+      }
+
+      // Listen for slide changes to update URL hash
+      this.container.addEventListener('vvjs:slideChanged', (e) => {
+        if (deeplinkEnabled && deeplinkId) {
+          const newHash = `#${deeplinkId}-${e.detail.slideIndex}`;
+          
+          // Use replaceState to avoid cluttering browser history
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', newHash);
+          } else {
+            window.location.hash = newHash;
+          }
+        }
+      });
+
+      return slideActivated;
+    }
   }
 
   /**
@@ -302,6 +377,214 @@
         core.togglePause();
       }
     });
+  };
+
+/**
+   * Helper function to get slideshow container by identifier.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier (deeplink_identifier or CSS selector).
+   *
+   * @return {HTMLElement|null}
+   *   The container element or null if not found.
+   */
+  function getContainerByIdentifier(identifier) {
+    let container;
+
+    // Try deep link identifier first (if not a CSS selector)
+    if (!identifier.startsWith('.') && !identifier.startsWith('#')) {
+      container = document.querySelector(`[data-deeplink-id="${identifier}"]`);
+    }
+
+    // Fallback to CSS selector
+    if (!container) {
+      container = document.querySelector(identifier);
+    }
+
+    return container;
+  }
+
+  /**
+   * Helper function to get core module from identifier.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {Object|null}
+   *   The core module or null if not found.
+   */
+  function getCoreModule(identifier) {
+    const container = getContainerByIdentifier(identifier);
+
+    if (!container || !container.vvjsSlideshow) {
+      return null;
+    }
+
+    return container.vvjsSlideshow.getModule('core');
+  }
+
+  /**
+   * Navigate to a specific slide by identifier.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier (from deeplink_identifier or container selector).
+   * @param {number} slideIndex
+   *   The slide number to navigate to (1-based).
+   *
+   * @return {boolean}
+   *   True if navigation was successful, false otherwise.
+   *
+   * @example
+   * Drupal.vvjs.goToSlide('gallery', 3);
+   */
+  Drupal.vvjs.goToSlide = function(identifier, slideIndex) {
+    const core = getCoreModule(identifier);
+
+    if (!core) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn(`VVJS: Slideshow "${identifier}" not found`);
+      }
+      return false;
+    }
+
+    if (slideIndex < 1 || slideIndex > core.totalSlides) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn(`VVJS: Invalid slide index ${slideIndex}. Must be between 1 and ${core.totalSlides}`);
+      }
+      return false;
+    }
+
+    core.goToSlide(slideIndex);
+    core.startAutoSlide();
+    return true;
+  };
+
+  /**
+   * Get the current slide index for a slideshow.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {number|null}
+   *   The current slide index (1-based) or null if not found.
+   *
+   * @example
+   * const currentSlide = Drupal.vvjs.getCurrentSlide('gallery');
+   */
+  Drupal.vvjs.getCurrentSlide = function(identifier) {
+    const core = getCoreModule(identifier);
+    return core ? core.slideIndex : null;
+  };
+
+  /**
+   * Get total number of slides in a slideshow.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {number|null}
+   *   The total number of slides or null if not found.
+   *
+   * @example
+   * const total = Drupal.vvjs.getTotalSlides('gallery');
+   */
+  Drupal.vvjs.getTotalSlides = function(identifier) {
+    const core = getCoreModule(identifier);
+    return core ? core.totalSlides : null;
+  };
+
+  /**
+   * Navigate to next slide.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {boolean}
+   *   True if successful.
+   *
+   * @example
+   * Drupal.vvjs.nextSlide('gallery');
+   */
+  Drupal.vvjs.nextSlide = function(identifier) {
+    const core = getCoreModule(identifier);
+
+    if (core) {
+      core.nextSlide();
+      core.startAutoSlide();
+      return true;
+    }
+
+    return false;
+  };
+
+  /**
+   * Navigate to previous slide.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {boolean}
+   *   True if successful.
+   *
+   * @example
+   * Drupal.vvjs.prevSlide('gallery');
+   */
+  Drupal.vvjs.prevSlide = function(identifier) {
+    const core = getCoreModule(identifier);
+
+    if (core) {
+      core.prevSlide();
+      core.startAutoSlide();
+      return true;
+    }
+
+    return false;
+  };
+
+  /**
+   * Pause a specific slideshow.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {boolean}
+   *   True if successful.
+   *
+   * @example
+   * Drupal.vvjs.pause('gallery');
+   */
+  Drupal.vvjs.pause = function(identifier) {
+    const core = getCoreModule(identifier);
+
+    if (core && !core.isPaused) {
+      core.togglePause();
+      return true;
+    }
+
+    return false;
+  };
+
+  /**
+   * Resume a specific slideshow.
+   *
+   * @param {string} identifier
+   *   The slideshow identifier.
+   *
+   * @return {boolean}
+   *   True if successful.
+   *
+   * @example
+   * Drupal.vvjs.resume('gallery');
+   */
+  Drupal.vvjs.resume = function(identifier) {
+    const core = getCoreModule(identifier);
+
+    if (core && core.isPaused) {
+      core.togglePause();
+      return true;
+    }
+
+    return false;
   };
 
 })(Drupal, drupalSettings, once);

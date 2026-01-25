@@ -11,6 +11,12 @@ views.style.views_vvjs:
       label: 'Navigation type'
       constraints:
         Choice: ['none', 'dots', 'numbers']
+    enable_deeplink:
+      type: boolean
+      label: 'Enable deep linking'
+    deeplink_identifier:
+      type: string
+      label: 'Deep link URL identifier'
     animation:
       type: string
       label: 'Animation type'

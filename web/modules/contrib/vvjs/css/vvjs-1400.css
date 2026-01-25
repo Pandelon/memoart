@@ -7,41 +7,34 @@
  * Developer:    Alaa Haddad https://www.alaahaddad.com.
  */
 @media (min-width:87.5rem) {
-  .vvjs.br-1400.arrows-top-big .slide-indicators {
-    opacity: 0.2;
-    transition: opacity 0.3s ease, background-color 0.3s ease;
+  .vvjs.br-1400.arrows-sides-big .vvjs-items,
+  .vvjs.br-1400.arrows-sides-big .nav-dots-numbers,
+  .vvjs.br-1400.hero-slideshow.arrows-sides-big .vvjs-item .vvjs-hero-image img {
+    width: calc(100% - 100px) !important;
+    margin-inline-end: 50px !important;
+    margin-inline-start: 50px !important;
   }
 
-  .vvjs.br-1400.arrows-top-big .slide-indicators:hover {
-    opacity: 1;
-    outline: none;
-    background-color: transparent !important;
+  .vvjs.br-1400.arrows-sides-big .slide-indicators button {
+    opacity: 0.8;
   }
 
-  .vvjs.br-1400 .slide-indicators.arrows-sides-big {
-    opacity: 1;
-  }
-
-  .vvjs.br-1400.arrows-sides-big .vvjs-inner {
-    width: calc(100% - 120px);
-    margin: 0 auto;
-  }
-
-  .vvjs.br-1400.arrows-sides-big .slide-indicators .next-arrow {
-    right: -60px;
-  }
-
-  .vvjs.br-1400.arrows-sides-big .slide-indicators .prev-arrow {
-    left: -60px;
+  .vvjs.br-1400.hero-slideshow.arrows-sides-big .vvjs-inner > .nav-dots-numbers {
+    left: 50px !important;
+    margin: 0!important;
   }
 
 }
-
 
 @media (max-width:87.49875rem) {
   html .vvjs.br-1400.arrows-top-big .slide-indicators,
   html .vvjs.br-1400.arrows-sides-big .slide-indicators {
     display: none !important;
+  }
+
+  html .vvjs.br-1400.arrows-top-big .slide-indicators button,
+  html .vvjs.br-1400.arrows-sides-big .slide-indicators button {
+    pointer-events: none !important;
   }
 
 }
