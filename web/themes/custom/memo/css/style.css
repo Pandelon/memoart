@@ -238,7 +238,7 @@ h2 a {
 }
 h2 a:hover {
   text-decoration: none;
-  color: #996300;
+  color: hsl(39, 100%, 30%);
 }
 
 .flex-control-nav {
