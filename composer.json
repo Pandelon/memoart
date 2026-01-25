@@ -20,7 +20,7 @@
         "drupal/admin_toolbar": "^3.6",
         "drupal/back_to_top": "^2.0",
         "drupal/background_image_formatter": "^2.0",
-        "drupal/backup_migrate": "^5.0",
+        "drupal/backup_migrate": "^5.1",
         "drupal/block_class": "^2.0",
         "drupal/bootstrap5": "^4.0",
         "drupal/bootstrap_simple_carousel": "^3.0",
