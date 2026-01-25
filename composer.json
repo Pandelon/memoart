@@ -30,6 +30,7 @@
         "drupal/core-project-message": "^11.3",
         "drupal/core-recommended": "^11.3",
         "drupal/ctools": "^4.0.4",
+        "drupal/google_tag": "^2.0",
         "drupal/jquery_ui": "^1.6",
         "drupal/jquery_ui_checkboxradio": "^2.0",
         "drupal/menu_link_attributes": "^1.6",
