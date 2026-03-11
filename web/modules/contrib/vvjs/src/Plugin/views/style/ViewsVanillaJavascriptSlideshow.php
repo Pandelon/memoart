@@ -140,6 +140,11 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     $options['show_total_slides'] = ['default' => FALSE];
     $options['show_slide_progress'] = ['default' => FALSE];
     $options['show_play_pause'] = ['default' => TRUE];
+    $options['pause_on_hover'] = ['default' => TRUE];
+    $options['enable_swipe'] = ['default' => TRUE];
+    $options['enable_keyboard'] = ['default' => TRUE];
+    $options['enable_looping'] = ['default' => TRUE];
+    $options['start_index'] = ['default' => 1];
     $options['enable_deeplink'] = ['default' => FALSE];
     $options['deeplink_identifier'] = ['default' => ''];
     return $options;
@@ -160,6 +165,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     $this->buildNavigationSection($form);
     $this->buildAnimationSection($form);
     $this->buildDisplayOptionsSection($form);
+    $this->buildBehaviorSettingsSection($form);
     $this->buildAdvancedOptionsSection($form);
     $this->buildTokenDocumentation($form);
     $this->attachFormAssets($form);
@@ -576,6 +582,65 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#default_value' => $this->options['show_play_pause'] ?? TRUE,
       '#description' => $this->t('Enable this option to show a play/pause button at the bottom of the slideshow. (Time In Seconds >= 2 s)'),
       '#states' => $timing_enabled_state,
+    ];
+  }
+
+  /**
+   * Build behavior settings section.
+   *
+   * @param array $form
+   *   The form array (passed by reference).
+   */
+  protected function buildBehaviorSettingsSection(array &$form): void {
+    $form['behavior_section'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Behavior Settings'),
+      '#open' => TRUE,
+      '#weight' => 5,
+    ];
+
+    $timing_enabled_state = [
+      'enabled' => [
+        ':input[name="style_options[timing_section][time_in_seconds]"]' => ['!value' => '0'],
+      ],
+    ];
+
+    $form['behavior_section']['pause_on_hover'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Pause on Hover'),
+      '#default_value' => $this->options['pause_on_hover'] ?? TRUE,
+      '#description' => $this->t('Pause the slideshow when the mouse hovers over it. Uncheck to keep the slideshow running on hover.'),
+      '#states' => $timing_enabled_state,
+    ];
+
+    $form['behavior_section']['enable_swipe'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Touch/Swipe Gestures'),
+      '#default_value' => $this->options['enable_swipe'] ?? TRUE,
+      '#description' => $this->t('Allow users to navigate slides using touch swipe gestures on mobile devices.'),
+    ];
+
+    $form['behavior_section']['enable_keyboard'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Keyboard Navigation'),
+      '#default_value' => $this->options['enable_keyboard'] ?? TRUE,
+      '#description' => $this->t('Allow users to navigate slides using keyboard arrow keys, Space to pause/play, Home/End to jump to first/last slide.'),
+    ];
+
+    $form['behavior_section']['enable_looping'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Looping'),
+      '#default_value' => $this->options['enable_looping'] ?? TRUE,
+      '#description' => $this->t('When enabled, the slideshow will loop back to the first slide after the last slide. When disabled, it will stop at the last slide.'),
+    ];
+
+    $form['behavior_section']['start_index'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Start Index'),
+      '#default_value' => $this->options['start_index'] ?? 1,
+      '#min' => 1,
+      '#step' => 1,
+      '#description' => $this->t('Choose which slide the slideshow should display first when it loads. For example, enter 1 to start with the first slide, 2 for the second, etc. This is useful when you have multiple slideshows side by side and want each to start at a different position for a staggered effect. If the number exceeds the total slides, the slideshow will automatically start from the last slide.'),
     ];
   }
 
@@ -1093,6 +1158,15 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       $flattened['show_total_slides'] = $display['show_total_slides'] ?? FALSE;
       $flattened['show_slide_progress'] = $display['show_slide_progress'] ?? FALSE;
       $flattened['show_play_pause'] = $display['show_play_pause'] ?? TRUE;
+    }
+
+    if (isset($values['behavior_section'])) {
+      $behavior = $values['behavior_section'];
+      $flattened['pause_on_hover'] = $behavior['pause_on_hover'] ?? TRUE;
+      $flattened['enable_swipe'] = $behavior['enable_swipe'] ?? TRUE;
+      $flattened['enable_keyboard'] = $behavior['enable_keyboard'] ?? TRUE;
+      $flattened['enable_looping'] = $behavior['enable_looping'] ?? TRUE;
+      $flattened['start_index'] = (int) ($behavior['start_index'] ?? 1);
     }
 
     if (isset($values['advanced_section'])) {

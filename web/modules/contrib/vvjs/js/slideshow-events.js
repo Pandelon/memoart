@@ -29,9 +29,9 @@
       // Mouse state
       this.isMouseOver = false;
 
-      // Configuration
-      this.swipeEnabled = true;
-      this.pauseOnHover = true;
+      // Configuration - read from data attributes, default to true if not specified
+      this.swipeEnabled = container.dataset.enableSwipe !== 'false';
+      this.pauseOnHover = container.dataset.pauseOnHover !== 'false';
 
       this.init();
     }

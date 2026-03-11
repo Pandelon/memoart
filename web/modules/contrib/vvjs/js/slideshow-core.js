@@ -21,10 +21,12 @@
       // Configuration
       this.slideTime = parseInt(container.dataset.time, 10) || 5000;
       this.totalSlides = this.slides.length;
+      this.loopingEnabled = container.dataset.enableLooping !== 'false';
 
-      // State
-      this.slideIndex = 1;
-      this.currentSlideIndex = 1; // Track for transition events
+      // State - use data-start-index if provided (1-indexed), default to 1
+      const startIndex = parseInt(container.dataset.startIndex, 10) || 1;
+      this.slideIndex = Math.max(1, Math.min(startIndex, this.totalSlides));
+      this.currentSlideIndex = this.slideIndex; // Track for transition events
       this.isPaused = container.dataset.static === 'true';
       this.isVisible = true;
       this.autoSlideIntervalId = null;
@@ -153,7 +155,18 @@
      * Navigate to next slide.
      */
     nextSlide() {
-      this.slideIndex = (this.slideIndex % this.totalSlides) + 1;
+      if (this.loopingEnabled) {
+        this.slideIndex = (this.slideIndex % this.totalSlides) + 1;
+      } else {
+        // Stop at last slide when looping is disabled
+        if (this.slideIndex < this.totalSlides) {
+          this.slideIndex++;
+        } else {
+          // At last slide with no looping - stop auto-advance
+          this.stopAutoSlide();
+          return;
+        }
+      }
       this.updateSlideVisibility();
       this.adjustHeight();
     }
@@ -162,7 +175,16 @@
      * Navigate to previous slide.
      */
     prevSlide() {
-      this.slideIndex = (this.slideIndex === 1) ? this.totalSlides : this.slideIndex - 1;
+      if (this.loopingEnabled) {
+        this.slideIndex = (this.slideIndex === 1) ? this.totalSlides : this.slideIndex - 1;
+      } else {
+        // Stop at first slide when looping is disabled
+        if (this.slideIndex > 1) {
+          this.slideIndex--;
+        } else {
+          return;
+        }
+      }
       this.updateSlideVisibility();
       this.adjustHeight();
     }

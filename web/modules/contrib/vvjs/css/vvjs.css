@@ -54,7 +54,7 @@
    Slide Items & Container
    ========================================================================== */
 .vvjs .vvjs-items {
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
   overflow: hidden;
   transition: all 0.5s ease-in-out;
 }

@@ -80,7 +80,7 @@ views.style.views_vvjs:
       type: string
       label: 'Overlay position'
       constraints:
-        Choice: ['d-full', d-middle', 'd-left', 'd-right', 'd-top', 'd-bottom', 'd-top-left', 'd-top-right', 'd-bottom-left', 'd-bottom-right', 'd-top-middle', 'd-bottom-middle']
+        Choice: ['d-full', 'd-middle', 'd-left', 'd-right', 'd-top', 'd-bottom', 'd-top-left', 'd-top-right', 'd-bottom-left', 'd-bottom-right', 'd-top-middle', 'd-bottom-middle']
     show_total_slides:
       type: boolean
       label: 'Show total slide count'
@@ -90,3 +90,21 @@ views.style.views_vvjs:
     show_play_pause:
       type: boolean
       label: 'Show play/pause button'
+    pause_on_hover:
+      type: boolean
+      label: 'Pause slideshow on mouse hover'
+    enable_swipe:
+      type: boolean
+      label: 'Enable touch/swipe gestures'
+    enable_keyboard:
+      type: boolean
+      label: 'Enable keyboard navigation'
+    enable_looping:
+      type: boolean
+      label: 'Enable slideshow looping'
+    start_index:
+      type: integer
+      label: 'Start index (which slide to show first)'
+      constraints:
+        Range:
+          min: 1

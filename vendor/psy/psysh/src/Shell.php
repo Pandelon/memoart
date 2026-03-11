@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2025 Justin Hileman
+ * (c) 2012-2026 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,6 +12,11 @@
 namespace Psy;
 
 use Psy\CodeCleaner\NoReturnValue;
+use Psy\Completion\CompletionEngine;
+use Psy\Completion\Source\CommandOptionSource;
+use Psy\Completion\Source\CommandSource;
+use Psy\Completion\Source\HistorySource;
+use Psy\Completion\Source\MatcherAdapterSource;
 use Psy\Exception\BreakException;
 use Psy\Exception\ErrorException;
 use Psy\Exception\Exception as PsyException;
@@ -21,15 +26,18 @@ use Psy\Exception\ThrowUpException;
 use Psy\ExecutionLoop\ProcessForker;
 use Psy\ExecutionLoop\RunkitReloader;
 use Psy\ExecutionLoop\SignalHandler;
+use Psy\ExecutionLoop\UopzReloader;
 use Psy\Formatter\TraceFormatter;
 use Psy\Input\ShellInput;
 use Psy\Input\SilentInput;
 use Psy\Output\ShellOutput;
+use Psy\Readline\InteractiveReadlineInterface;
 use Psy\Readline\Readline;
+use Psy\Readline\ReadlineAware;
 use Psy\TabCompletion\AutoCompleter;
 use Psy\TabCompletion\Matcher;
 use Psy\TabCompletion\Matcher\CommandsMatcher;
-use Psy\VarDumper\Presenter;
+use Psy\Util\Tty;
 use Psy\VarDumper\PresenterAware;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command as BaseCommand;
@@ -43,6 +51,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\StreamOutput;
 
 /**
  * The Psy Shell application.
@@ -56,31 +65,38 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class Shell extends Application
 {
-    const VERSION = 'v0.12.13';
+    const VERSION = 'v0.12.21';
 
     private Configuration $config;
-    private CodeCleaner $cleaner;
+    private ?CodeCleaner $cleaner = null;
     private OutputInterface $output;
     private ?int $originalVerbosity = null;
-    private Readline $readline;
+    private ?Readline $readline = null;
     private array $inputBuffer;
     /** @var string|false|null */
     private $code = null;
     private array $codeBuffer = [];
     private bool $codeBufferOpen = false;
-    private bool $codeLooksLikeAction = false;
     private array $codeStack;
     private string $stdoutBuffer;
     private Context $context;
     private array $includes;
     private bool $outputWantsNewline = false;
     private array $loopListeners;
+    private bool $booted = false;
+    private bool $autoloadWarmed = false;
     private ?AutoCompleter $autoCompleter = null;
+    private ?CompletionEngine $completionEngine = null;
+    /** @var Completion\Source\SourceInterface[] */
+    private array $pendingCompletionSources = [];
     private array $matchers = [];
-    private ?CommandsMatcher $commandsMatcher = null;
+    /** @var CommandAware[] */
+    private array $commandCompletion = [];
     private bool $lastExecSuccess = true;
     private bool $nonInteractive = false;
     private ?int $errorReporting = null;
+    private bool $interactiveSignalCharsEnabled = false;
+    private bool $outputWritten = false;
 
     /**
      * Create a new Psy Shell.
@@ -90,10 +106,8 @@ class Shell extends Application
     public function __construct(?Configuration $config = null)
     {
         $this->config = $config ?: new Configuration();
-        $this->cleaner = $this->config->getCodeCleaner();
         $this->context = new Context();
         $this->includes = [];
-        $this->readline = $this->config->getReadline();
         $this->inputBuffer = [];
         $this->codeStack = [];
         $this->stdoutBuffer = '';
@@ -105,8 +119,6 @@ class Shell extends Application
 
         // Register the current shell session's config with \Psy\info
         \Psy\info($this->config);
-
-        $this->warmAutoloader();
     }
 
     /**
@@ -117,6 +129,11 @@ class Shell extends Application
      */
     private function warmAutoloader(): void
     {
+        if ($this->autoloadWarmed) {
+            return;
+        }
+        $this->autoloadWarmed = true;
+
         $warmers = $this->config->getAutoloadWarmers();
         if (empty($warmers)) {
             return;
@@ -148,6 +165,112 @@ class Shell extends Application
 
         if (!\class_exists('Composer\\ClassMapGenerator\\ClassMapGenerator', false)) {
             $output->writeln('<whisper>Autoload warming works best with composer/class-map-generator installed</whisper>');
+        }
+    }
+
+    /**
+     * Boot the shell, initializing the CodeCleaner and Readline.
+     *
+     * This is called lazily when commands or methods require these dependencies.
+     * If input/output are provided, they'll be used for trust prompts. Otherwise,
+     * falls back to config defaults.
+     */
+    public function boot(?InputInterface $input = null, ?OutputInterface $output = null): void
+    {
+        if ($this->booted) {
+            return;
+        }
+
+        $this->loadLocalConfig($input, $output);
+
+        $this->cleaner = $this->config->getCodeCleaner();
+        $this->readline = $this->configureReadline($this->config->getReadline());
+        $this->booted = true;
+
+        // BufferCommand only makes sense for legacy readlines
+        if (!$this->readline instanceof InteractiveReadlineInterface) {
+            $this->add(new Command\BufferCommand());
+        }
+
+        $this->refreshCommandDependencies();
+    }
+
+    /**
+     * Load local config with trust prompt if needed.
+     */
+    private function loadLocalConfig(?InputInterface $input, ?OutputInterface $output): void
+    {
+        if ($output === null) {
+            $output = $this->config->getOutput();
+        }
+
+        if ($input === null) {
+            $input = new ArrayInput([]);
+            // Programmatic callers (e.g. Shell::execute) don't provide a real
+            // interactive input stream, so trust prompts must not block.
+            $input->setInteractive(false);
+        }
+
+        $this->config->loadLocalConfigWithPrompt($input, $output);
+    }
+
+    /**
+     * Configure a readline instance before assigning it to the shell.
+     *
+     * This sets up shell awareness, interactive readline dependencies,
+     * output/theme integration, and options.
+     *
+     * @return Readline The configured readline instance
+     */
+    private function configureReadline(Readline $readline): Readline
+    {
+        if ($readline instanceof InteractiveReadlineInterface) {
+            // setOutput boots the interactive readline, so it must come first
+            $readline->setOutput($this->output ?? $this->config->getOutput());
+            $readline->setTheme($this->config->theme());
+            $readline->setRequireSemicolons($this->config->requireSemicolons());
+            $readline->setBracketedPaste($this->config->useBracketedPaste());
+            $readline->setUseSuggestions($this->config->useSuggestions());
+        }
+
+        if ($readline instanceof ShellAware) {
+            $readline->setShell($this);
+        }
+
+        return $readline;
+    }
+
+    /**
+     * Refresh dependencies on all registered commands.
+     */
+    private function refreshCommandDependencies(): void
+    {
+        foreach ($this->all() as $command) {
+            $this->configureCommand($command);
+        }
+    }
+
+    /**
+     * Configure a command with context and dependencies.
+     */
+    private function configureCommand(BaseCommand $command): void
+    {
+        if ($command instanceof ContextAware) {
+            $command->setContext($this->context);
+        }
+
+        if ($this->booted) {
+            if ($command instanceof CodeCleanerAware && $this->cleaner !== null) {
+                $command->setCodeCleaner($this->cleaner);
+            }
+
+            if ($command instanceof PresenterAware) {
+                $command->setPresenter($this->config->getPresenter());
+            }
+
+            if ($command instanceof ReadlineAware && $this->readline !== null) {
+                $command->setReadline($this->readline);
+            }
         }
     }
 
@@ -202,7 +325,7 @@ class Shell extends Application
     /**
      * Adds a command object.
      *
-     * {@inheritdoc}
+     * @deprecated since Symfony Console 7.4, use addCommand() instead
      *
      * @param BaseCommand $command A Symfony Console Command object
      *
@@ -210,21 +333,32 @@ class Shell extends Application
      */
     public function add(BaseCommand $command): BaseCommand
     {
-        if ($ret = parent::add($command)) {
-            if ($ret instanceof ContextAware) {
-                $ret->setContext($this->context);
-            }
+        return $this->addCommand($command);
+    }
 
-            if ($ret instanceof CodeCleanerAware) {
-                $ret->setCodeCleaner($this->cleaner);
-            }
+    /**
+     * Adds a command object.
+     *
+     * @param BaseCommand|callable $command A Symfony Console Command object or callable
+     *
+     * @return BaseCommand|null The registered command, or null
+     */
+    public function addCommand($command): ?BaseCommand
+    {
+        // For Symfony Console < 7.4, use parent::add()
+        if (\method_exists(Application::class, 'addCommand')) {
+            /** @phan-suppress-next-line PhanUndeclaredStaticMethod (Symfony Console 7.4+) */
+            $ret = parent::addCommand($command);
+        } else {
+            $ret = parent::add($command);
+        }
 
-            if ($ret instanceof PresenterAware) {
-                $ret->setPresenter($this->config->getPresenter());
-            }
+        if ($ret) {
+            $this->configureCommand($ret);
 
-            if (isset($this->commandsMatcher)) {
-                $this->commandsMatcher->setCommands($this->all());
+            $allCommands = $this->all();
+            foreach ($this->commandCompletion as $instance) {
+                $instance->setCommands($allCommands);
             }
         }
 
@@ -252,23 +386,23 @@ class Shell extends Application
     protected function getDefaultCommands(): array
     {
         $sudo = new Command\SudoCommand();
-        $sudo->setReadline($this->readline);
 
         $hist = new Command\HistoryCommand();
-        $hist->setReadline($this->readline);
 
-        return [
+        $doc = new Command\DocCommand();
+        $doc->setConfiguration($this->config);
+
+        $commands = [
             new Command\HelpCommand(),
             new Command\ListCommand(),
             new Command\DumpCommand(),
-            new Command\DocCommand(),
+            $doc,
             new Command\ShowCommand(),
             new Command\WtfCommand(),
             new Command\WhereamiCommand(),
             new Command\ThrowUpCommand(),
             new Command\TimeitCommand(),
             new Command\TraceCommand(),
-            new Command\BufferCommand(),
             new Command\ClearCommand(),
             new Command\EditCommand($this->config->getRuntimeDir(false)),
             // new Command\PsyVersionCommand(),
@@ -276,6 +410,16 @@ class Shell extends Application
             $hist,
             new Command\ExitCommand(),
         ];
+
+        // BufferCommand is conditionally added in boot() for legacy readlines
+
+        // Only add yolo command if UopzReloader is supported
+        if (UopzReloader::isSupported()) {
+            $yolo = new Command\YoloCommand();
+            $commands[] = $yolo;
+        }
+
+        return $commands;
     }
 
     /**
@@ -283,12 +427,11 @@ class Shell extends Application
      */
     protected function getDefaultMatchers(): array
     {
-        // Store the Commands Matcher for later. If more commands are added,
-        // we'll update the Commands Matcher too.
-        $this->commandsMatcher = new CommandsMatcher($this->all());
+        $commandsMatcher = new CommandsMatcher($this->all());
+        $this->commandCompletion[] = $commandsMatcher;
 
-        return [
-            $this->commandsMatcher,
+        $matchers = [
+            $commandsMatcher,
             new Matcher\KeywordsMatcher(),
             new Matcher\VariablesMatcher(),
             new Matcher\ConstantsMatcher(),
@@ -298,10 +441,14 @@ class Shell extends Application
             new Matcher\ClassAttributesMatcher(),
             new Matcher\ObjectMethodsMatcher(),
             new Matcher\ObjectAttributesMatcher(),
+            new Matcher\MagicMethodsMatcher(),
+            new Matcher\MagicPropertiesMatcher(),
             new Matcher\ClassMethodDefaultParametersMatcher(),
             new Matcher\ObjectMethodDefaultParametersMatcher(),
             new Matcher\FunctionDefaultParametersMatcher(),
         ];
+
+        return $matchers;
     }
 
     /**
@@ -313,6 +460,10 @@ class Shell extends Application
     {
         $listeners = [];
 
+        if ($inputLogger = $this->config->getInputLogger()) {
+            $listeners[] = $inputLogger;
+        }
+
         if (ProcessForker::isSupported() && $this->config->usePcntl()) {
             $listeners[] = new ProcessForker();
         } elseif (SignalHandler::isSupported()) {
@@ -323,9 +474,29 @@ class Shell extends Application
 
         if (RunkitReloader::isSupported()) {
             $listeners[] = new RunkitReloader();
+        } elseif (UopzReloader::isSupported()) {
+            $listeners[] = new UopzReloader();
+        }
+
+        if ($executionLogger = $this->config->getExecutionLogger()) {
+            $listeners[] = $executionLogger;
         }
 
         return $listeners;
+    }
+
+    /**
+     * Enable or disable force-reload mode for code reloaders.
+     *
+     * Used by the `yolo` command to bypass safety warnings when reloading code.
+     */
+    public function setForceReload(bool $force): void
+    {
+        foreach ($this->loopListeners as $listener) {
+            if (\method_exists($listener, 'setForceReload')) {
+                $listener->setForceReload($force);
+            }
+        }
     }
 
     /**
@@ -340,6 +511,10 @@ class Shell extends Application
         if (isset($this->autoCompleter)) {
             $this->addMatchersToAutoCompleter($matchers);
         }
+
+        if (isset($this->completionEngine)) {
+            $this->addLegacyMatchersToCompletionEngine($matchers);
+        }
     }
 
     /**
@@ -352,6 +527,26 @@ class Shell extends Application
         @\trigger_error('`addTabCompletionMatchers` is deprecated; call `addMatchers` instead.', \E_USER_DEPRECATED);
 
         $this->addMatchers($matchers);
+    }
+
+    /**
+     * Add completion sources to the completion engine.
+     *
+     * @internal experimental; API may change before Interactive Readline is stable
+     *
+     * @param Completion\Source\SourceInterface[] $sources
+     */
+    public function addCompletionSources(array $sources)
+    {
+        if (!isset($this->completionEngine)) {
+            $this->pendingCompletionSources = \array_merge($this->pendingCompletionSources, $sources);
+
+            return;
+        }
+
+        foreach ($sources as $source) {
+            $this->completionEngine->addSource($source);
+        }
     }
 
     /**
@@ -377,6 +572,7 @@ class Shell extends Application
     {
         // We'll just ignore the input passed in, and set up our own!
         $input = new ArrayInput([]);
+        $input->setInteractive($this->config->getInputInteractive());
 
         if ($output === null) {
             $output = $this->config->getOutput();
@@ -410,9 +606,11 @@ class Shell extends Application
     public function doRun(InputInterface $input, OutputInterface $output): int
     {
         $this->setOutput($output);
+        $this->boot($input, $output);
         $this->resetCodeBuffer();
+        $this->warmAutoloader();
 
-        if ($input->isInteractive()) {
+        if ($this->config->getInputInteractive()) {
             // @todo should it be possible to have raw output in an interactive run?
             return $this->doInteractiveRun();
         } else {
@@ -432,11 +630,16 @@ class Shell extends Application
      */
     private function doInteractiveRun(): int
     {
-        $this->initializeTabCompletion();
+        if ($this->config->useTabCompletion()) {
+            $this->initializeTabCompletion();
+            $this->initializeCompletionEngine();
+        }
+
         $this->readline->readHistory();
 
         $this->output->writeln($this->getHeader());
         $this->writeVersionInfo();
+        $this->writeManualUpdateInfo();
         $this->writeStartupMessage();
 
         try {
@@ -473,6 +676,7 @@ class Shell extends Application
         if (!$rawOutput && !$this->config->outputIsPiped()) {
             $this->output->writeln($this->getHeader());
             $this->writeVersionInfo();
+            $this->writeManualUpdateInfo();
             $this->writeStartupMessage();
         }
 
@@ -560,11 +764,14 @@ class Shell extends Application
      */
     public function getInput(bool $interactive = true)
     {
+        $this->boot();
+
         $this->codeBufferOpen = false;
 
         do {
             // reset output verbosity (in case it was altered by a subcommand)
             $this->output->setVerbosity($this->originalVerbosity);
+            $this->outputWritten = false;
 
             $input = $this->readline();
 
@@ -591,6 +798,7 @@ class Shell extends Application
 
             // handle empty input
             if (\trim($input) === '' && !$this->codeBufferOpen) {
+                $this->notifyOutputWritten();
                 continue;
             }
 
@@ -599,7 +807,12 @@ class Shell extends Application
             // If the input isn't in an open string or comment, check for commands to run.
             if ($this->hasCommand($input) && !$this->inputInOpenStringOrComment($input)) {
                 $this->addHistory($input);
+                $outputPositions = $this->captureOutputStreamPositions();
                 $this->runCommand($input);
+                if (!$this->outputWritten && $this->outputWasWrittenSince($outputPositions)) {
+                    $this->outputWritten = true;
+                }
+                $this->notifyOutputWritten();
 
                 continue;
             }
@@ -636,6 +849,12 @@ class Shell extends Application
     protected function beforeRun()
     {
         foreach ($this->loopListeners as $listener) {
+            if ($listener instanceof OutputAware) {
+                $listener->setOutput($this->output);
+            }
+        }
+
+        foreach ($this->loopListeners as $listener) {
             $listener->beforeRun($this);
         }
     }
@@ -645,6 +864,8 @@ class Shell extends Application
      */
     public function beforeLoop()
     {
+        $this->outputWritten = false;
+
         foreach ($this->loopListeners as $listener) {
             $listener->beforeLoop($this);
         }
@@ -674,6 +895,7 @@ class Shell extends Application
     public function onExecute(string $code): string
     {
         $this->errorReporting = \error_reporting();
+        $this->enableInteractiveSignalCharsIfNeeded();
 
         foreach ($this->loopListeners as $listener) {
             if (($return = $listener->onExecute($this, $code)) !== null) {
@@ -696,9 +918,93 @@ class Shell extends Application
      */
     public function afterLoop()
     {
+        $this->disableInteractiveSignalCharsIfNeeded();
+
         foreach (\array_reverse($this->loopListeners) as $listener) {
             $listener->afterLoop($this);
         }
+
+        $this->notifyOutputWritten();
+    }
+
+    /**
+     * Report to the interactive readline whether visible output was written.
+     */
+    private function notifyOutputWritten(): void
+    {
+        if ($this->readline instanceof InteractiveReadlineInterface) {
+            $this->readline->setOutputWritten($this->outputWritten);
+        }
+    }
+
+    /**
+     * Capture write positions for output streams we can inspect.
+     *
+     * @return array<int, int>|null
+     */
+    private function captureOutputStreamPositions(): ?array
+    {
+        $outputs = [$this->output];
+        if ($this->output instanceof ConsoleOutput) {
+            $outputs[] = $this->output->getErrorOutput();
+        }
+
+        $positions = [];
+
+        foreach ($outputs as $output) {
+            if (!$output instanceof StreamOutput) {
+                continue;
+            }
+
+            $stream = $output->getStream();
+            if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
+                continue;
+            }
+
+            $position = @\ftell($stream);
+            if (!\is_int($position)) {
+                continue;
+            }
+
+            $positions[(int) $stream] = $position;
+        }
+
+        return $positions !== [] ? $positions : null;
+    }
+
+    /**
+     * Determine whether a command wrote output based on stream movement.
+     *
+     * If stream positions are unavailable (for example, on non-seekable TTY
+     * streams), assume output may have been written to avoid false "no output"
+     * frame continuation.
+     *
+     * @param array<int, int>|null $before
+     */
+    private function outputWasWrittenSince(?array $before): bool
+    {
+        if ($before === null) {
+            return true;
+        }
+
+        $after = $this->captureOutputStreamPositions();
+        if ($after === null) {
+            return true;
+        }
+
+        foreach ($before as $streamId => $position) {
+            if (($after[$streamId] ?? $position) > $position) {
+                return true;
+            }
+        }
+
+        foreach ($after as $streamId => $position) {
+            if (!isset($before[$streamId]) && $position > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -708,9 +1014,61 @@ class Shell extends Application
      */
     protected function afterRun(int $exitCode = 0)
     {
+        $this->disableInteractiveSignalCharsIfNeeded();
+
         foreach (\array_reverse($this->loopListeners) as $listener) {
             $listener->afterRun($this, $exitCode);
         }
+    }
+
+    /**
+     * Enable terminal signal chars during code execution when no SIGINT listener is active.
+     *
+     * Interactive readline raw mode disables terminal-generated SIGINT by default.
+     * When ProcessForker/SignalHandler are unavailable, we temporarily re-enable
+     * signal chars so Ctrl-C can still interrupt long-running code.
+     */
+    private function enableInteractiveSignalCharsIfNeeded(): void
+    {
+        if (
+            $this->interactiveSignalCharsEnabled
+            || $this->nonInteractive
+            || !($this->readline instanceof InteractiveReadlineInterface)
+            || $this->hasSigintExecutionListener()
+            || !Tty::supportsStty()
+        ) {
+            return;
+        }
+
+        @\shell_exec('stty isig 2>/dev/null');
+        $this->interactiveSignalCharsEnabled = true;
+    }
+
+    /**
+     * Restore prompt-time terminal signal behavior after execution.
+     */
+    private function disableInteractiveSignalCharsIfNeeded(): void
+    {
+        if (!$this->interactiveSignalCharsEnabled) {
+            return;
+        }
+
+        @\shell_exec('stty -isig 2>/dev/null');
+        $this->interactiveSignalCharsEnabled = false;
+    }
+
+    /**
+     * Check whether any loop listener handles SIGINT during execution.
+     */
+    private function hasSigintExecutionListener(): bool
+    {
+        foreach ($this->loopListeners as $listener) {
+            if ($listener instanceof ProcessForker || $listener instanceof SignalHandler) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -909,7 +1267,7 @@ class Shell extends Application
      */
     public function addCode(string $code, bool $silent = false)
     {
-        $this->codeLooksLikeAction = false;
+        $this->boot();
 
         try {
             // Code lines ending in \ keep the buffer open
@@ -924,7 +1282,6 @@ class Shell extends Application
             $this->code = $this->cleaner->clean($this->codeBuffer, $this->config->requireSemicolons());
 
             if (!$silent && $this->code !== false) {
-                $this->codeLooksLikeAction = $this->cleaner->codeLooksLikeAction($this->codeBuffer);
                 $this->writeCleanerMessages();
             }
         } catch (\Throwable $e) {
@@ -996,6 +1353,10 @@ class Shell extends Application
 
         if (empty($command)) {
             throw new \InvalidArgumentException('Command not found: '.$input);
+        }
+
+        if ($logger = $this->config->getLogger()) {
+            $logger->logCommand($input);
         }
 
         $input = new ShellInput(\str_replace('\\', '\\\\', \rtrim($input, " \t\n\r\0\x0B;")));
@@ -1168,9 +1529,7 @@ class Shell extends Application
      */
     private function addCodeBufferToHistory()
     {
-        $codeBuffer = \array_filter($this->codeBuffer, function ($line) {
-            return !$line instanceof SilentInput;
-        });
+        $codeBuffer = \array_filter($this->codeBuffer, fn ($line) => !$line instanceof SilentInput);
 
         $this->addHistory(\implode("\n", $codeBuffer));
     }
@@ -1184,6 +1543,8 @@ class Shell extends Application
      */
     public function getNamespace()
     {
+        $this->boot();
+
         if ($namespace = $this->cleaner->getNamespace()) {
             return \implode('\\', $namespace);
         }
@@ -1216,6 +1577,7 @@ class Shell extends Application
             $this->output->write($out, false, OutputInterface::OUTPUT_RAW);
             $this->outputWantsNewline = (\substr($out, -1) !== "\n");
             $this->stdoutBuffer .= $out;
+            $this->outputWritten = true;
         }
 
         // Output buffering is done!
@@ -1270,12 +1632,13 @@ class Shell extends Application
         } else {
             $prompt = $this->config->theme()->returnValue();
             $indent = \str_repeat(' ', \strlen($prompt));
-            // Use concise output for actions, full output for inspection
-            $formatted = $this->presentValue($ret, $this->codeLooksLikeAction);
+            $formatted = $this->presentValue($ret);
             $formattedRetValue = \sprintf('<whisper>%s</whisper>', $prompt);
 
             $formatted = $formattedRetValue.\str_replace(\PHP_EOL, \PHP_EOL.$indent, $formatted);
         }
+
+        $this->outputWritten = true;
 
         if ($this->output instanceof ShellOutput) {
             $this->output->page($formatted.\PHP_EOL);
@@ -1307,6 +1670,7 @@ class Shell extends Application
         if (!$e instanceof BreakException) {
             $this->lastExecSuccess = false;
             $this->context->setLastException($e);
+            $this->outputWritten = true;
         }
 
         $output = $this->output;
@@ -1359,7 +1723,7 @@ class Shell extends Application
         $indent = $this->config->theme()->compact() ? '' : '  ';
 
         if ($e instanceof BreakException) {
-            return \sprintf('%s<info> INFO </info> %s.', $indent, \rtrim($e->getRawMessage(), '.'));
+            return \sprintf('%s<fg=black;bg=cyan> INFO </> %s.', $indent, \rtrim($e->getRawMessage(), '.'));
         } elseif ($e instanceof InterruptException) {
             return \sprintf('%s<warning> INTERRUPT </warning> %s.', $indent, $e->getRawMessage());
         } elseif ($e instanceof PsyException) {
@@ -1456,8 +1820,10 @@ class Shell extends Application
                         return 'User Deprecated';
                     case \E_DEPRECATED:
                         return 'Deprecated';
-                    case \E_STRICT:
-                        return 'Strict';
+                    default:
+                        if ((\PHP_VERSION_ID < 80400) && $severity === \E_STRICT) {
+                            return 'Strict';
+                        }
                 }
             }
         }
@@ -1494,7 +1860,14 @@ class Shell extends Application
      */
     public function execute(string $code, bool $throwExceptions = false)
     {
+        $this->boot();
+
         $this->setCode($code, true);
+
+        if ($logger = $this->config->getLogger()) {
+            $logger->logExecute($code);
+        }
+
         $closure = new ExecutionClosure($this);
 
         if ($throwExceptions) {
@@ -1562,13 +1935,12 @@ class Shell extends Application
      * @see Presenter::present
      *
      * @param mixed $val
-     * @param bool  $concise Present as a reference rather than a full value
      *
      * @return string Formatted value
      */
-    protected function presentValue($val, $concise = false): string
+    protected function presentValue($val): string
     {
-        return $this->config->getPresenter()->present($val, $concise ? 0 : 5, $concise ? 0 : Presenter::VERBOSE);
+        return $this->config->getPresenter()->present($val);
     }
 
     /**
@@ -1650,7 +2022,9 @@ class Shell extends Application
             return $line;
         }
 
-        $bracketedPaste = $interactive && $this->config->useBracketedPaste();
+        // Interactive readline manages bracketed paste internally
+        $usesInteractiveReadline = $this->readline instanceof InteractiveReadlineInterface;
+        $bracketedPaste = $interactive && $this->config->useBracketedPaste() && !$usesInteractiveReadline;
 
         if ($bracketedPaste) {
             \printf("\e[?2004h"); // Enable bracketed paste
@@ -1700,11 +2074,23 @@ class Shell extends Application
     /**
      * Get a PHP manual database instance.
      *
+     * @deprecated Use getManual() instead for unified access to all manual formats
+     *
      * @return \PDO|null
      */
     public function getManualDb()
     {
         return $this->config->getManualDb();
+    }
+
+    /**
+     * Get a PHP manual loader.
+     *
+     * @return Manual\ManualInterface|null
+     */
+    public function getManual()
+    {
+        return $this->config->getManual();
     }
 
     /**
@@ -1715,7 +2101,7 @@ class Shell extends Application
      */
     protected function initializeTabCompletion()
     {
-        if (!$this->config->useTabCompletion()) {
+        if (!$this->config->useTabCompletion() || $this->readline instanceof InteractiveReadlineInterface) {
             return;
         }
 
@@ -1726,6 +2112,7 @@ class Shell extends Application
         $this->addMatchersToAutoCompleter($this->getDefaultMatchers());
         $this->addMatchersToAutoCompleter($this->matchers);
 
+        // Standard readline: uses the legacy AutoCompleter
         $this->autoCompleter->activate();
     }
 
@@ -1742,6 +2129,65 @@ class Shell extends Application
             }
             $this->autoCompleter->addMatcher($matcher);
         }
+    }
+
+    /**
+     * Initialize context-aware completion for interactive readline.
+     */
+    private function initializeCompletionEngine(): void
+    {
+        $readline = $this->readline;
+        if (!($readline instanceof InteractiveReadlineInterface)) {
+            return;
+        }
+
+        $completion = new CompletionEngine($this->context, $this->cleaner);
+        $this->completionEngine = $completion;
+
+        $allCommands = $this->all();
+        $commandSource = new CommandSource($allCommands);
+        $commandOptionSource = new CommandOptionSource($allCommands);
+        $this->commandCompletion[] = $commandSource;
+        $this->commandCompletion[] = $commandOptionSource;
+
+        $completion->registerDefaultSources([
+            $commandSource,
+            $commandOptionSource,
+            new HistorySource($readline->getHistory()),
+        ]);
+
+        foreach ($this->pendingCompletionSources as $source) {
+            $completion->addSource($source);
+        }
+        $this->pendingCompletionSources = [];
+
+        if (!empty($this->matchers)) {
+            $this->addLegacyMatchersToCompletionEngine($this->matchers);
+        }
+
+        $readline->setCompletionEngine($completion);
+    }
+
+    /**
+     * Add legacy matchers to completion engine via adapter.
+     *
+     * @param array $matchers Legacy matchers to adapt
+     */
+    private function addLegacyMatchersToCompletionEngine(array $matchers): void
+    {
+        if ($this->completionEngine === null) {
+            throw new \LogicException('Completion engine is not set');
+        }
+
+        // Set context on context-aware matchers
+        foreach ($matchers as $matcher) {
+            if ($matcher instanceof ContextAware) {
+                $matcher->setContext($this->context);
+            }
+        }
+
+        // MatcherAdapterSource filters out matchers superseded by new-style sources
+        $this->completionEngine->addSource(new MatcherAdapterSource($matchers));
     }
 
     /**
@@ -1762,6 +2208,25 @@ class Shell extends Application
             }
         } catch (\InvalidArgumentException $e) {
             $this->output->writeln($e->getMessage());
+        }
+    }
+
+    /**
+     * Check for manual updates and write notification if available.
+     */
+    protected function writeManualUpdateInfo()
+    {
+        if (\PHP_SAPI !== 'cli') {
+            return;
+        }
+
+        try {
+            $checker = $this->config->getManualChecker();
+            if ($checker && !$checker->isLatest()) {
+                $this->output->writeln(\sprintf('<whisper>New PHP manual is available (latest: %s). Update with `doc --update-manual`</whisper>', $checker->getLatest()));
+            }
+        } catch (\Exception $e) {
+            // Silently ignore manual update check failures
         }
     }
 

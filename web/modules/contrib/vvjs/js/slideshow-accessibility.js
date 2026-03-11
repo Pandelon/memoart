@@ -18,11 +18,16 @@
       this.core = slideshowCore;
       this.announcer = container.querySelector('.announcer');
 
+      // Configuration - read from data attributes, default to true if not specified
+      this.keyboardEnabled = container.dataset.enableKeyboard !== 'false';
+
       this.init();
     }
 
     init() {
-      this.setupKeyboardNavigation();
+      if (this.keyboardEnabled) {
+        this.setupKeyboardNavigation();
+      }
       this.applyReducedMotion();
       this.setupScreenReaderSupport();
 

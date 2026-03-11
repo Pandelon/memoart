@@ -69,6 +69,7 @@ final class VvjsConstants {
     'min_height' => 'min-height',
     'max_content_width' => 'max-content-width',
     'max_width' => 'max-width',
+    'start_index' => 'start-index',
   ];
 
   /**
@@ -82,6 +83,10 @@ final class VvjsConstants {
     'show_total_slides' => 'show-total-slides',
     'hero_slideshow' => 'hero-slideshow',
     'enable_css' => 'enable-css',
+    'pause_on_hover' => 'pause-on-hover',
+    'enable_swipe' => 'enable-swipe',
+    'enable_keyboard' => 'enable-keyboard',
+    'enable_looping' => 'enable-looping',
   ];
 
   /**
