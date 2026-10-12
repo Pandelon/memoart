@@ -16,7 +16,6 @@ vvjs:
     js/vvjs-main.js: { weight: -8 }
   dependencies:
     - core/drupal
-    - core/drupal.ajax
     - core/drupalSettings
     - core/once
 
@@ -85,7 +84,6 @@ vvjs-opacity:
     js/vvjs-opacity.js: {}
   dependencies:
     - core/drupal
-    - core/drupal.ajax
     - core/drupalSettings
     - core/once
 
@@ -97,7 +95,6 @@ vvjs-admin:
     js/vvjs-admin.js: {}
   dependencies:
     - core/drupal
-    - core/drupal.ajax
     - core/drupalSettings
     - core/once
 

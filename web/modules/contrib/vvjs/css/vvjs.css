@@ -176,7 +176,8 @@
 /* Global Setting for top arrows on the sides */
 .vvjs.arrows-sides .vvjs-items,
 .vvjs.arrows-sides .nav-dots-numbers,
-.vvjs.hero-slideshow.arrows-sides .vvjs-item .vvjs-hero-image img {
+.vvjs.hero-slideshow.arrows-sides .vvjs-item .vvjs-hero-image img,
+.vvjs.hero-slideshow.arrows-sides .vvjs-item .vvjs-hero-image video {
   width: calc(100% - 100px) !important;
   margin-inline-end: 50px !important;
   margin-inline-start: 50px !important;
@@ -289,6 +290,45 @@
 }
 
 /* ==========================================================================
+   Scrollable Dots Navigation
+   ========================================================================== */
+
+.vvjs .dots-numbers-button-wrapper.vvjs-scrollable-dots {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 100%;
+  padding: 4px 0;
+  margin: 0;
+  gap: 0 16px;
+  justify-content: flex-start;
+  position: relative;
+  background: transparent;
+}
+
+.vvjs .dots-numbers-button-wrapper.vvjs-scrollable-dots::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+/* Ensure dots don't shrink in scrollable container */
+.vvjs .vvjs-scrollable-dots .dots-numbers-button {
+  flex-shrink: 0;
+}
+
+/* Reduced motion support for scrollable dots */
+@media (prefers-reduced-motion: reduce) {
+  .vvjs .dots-numbers-button-wrapper.vvjs-scrollable-dots {
+    scroll-behavior: auto;
+  }
+}
+
+/* ==========================================================================
    Page Counter & Progress Indicator
    ========================================================================== */
 
@@ -349,6 +389,7 @@
 }
 
 .progressbar::after {
+ font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace!important;
   content: attr(aria-valuenow) "%";
   width: calc(100% - var(--bar-width));
   height: calc(100% - var(--bar-width));
@@ -357,8 +398,9 @@
   display: grid;
   place-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: #007bff;
+  line-height: 1;
   position: absolute;
   transition: color 0.3s ease-in-out;
 }

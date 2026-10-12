@@ -31,7 +31,11 @@
       this.nextButton = container.querySelector('.next-arrow');
       this.prevButton = container.querySelector('.prev-arrow');
       this.dots = container.querySelectorAll('.dots-numbers-button');
+      this.dotsWrapper = container.querySelector('.dots-numbers-button-wrapper');
       this.currentSlideElement = container.querySelector('.current-slide');
+
+      // Scrollable dots configuration
+      this.scrollableDotsWidth = parseInt(this.dotsWrapper?.dataset.scrollableDotsWidth, 10) || 0;
 
       this.init();
     }
@@ -39,6 +43,11 @@
     init() {
       this.bindEvents();
       this.updateControls();
+
+      // Initialize scrollable dots if width is set
+      if (this.scrollableDotsWidth > 0 && this.dotsWrapper) {
+        this.initScrollableDots();
+      }
 
       // Listen for slideshow state changes
       this.container.addEventListener('vvjs:slideChanged', (e) => {
@@ -104,6 +113,11 @@
         dot.classList.toggle('active', isActive);
         dot.setAttribute('aria-selected', isActive);
       });
+
+      // Center active dot in scrollable container
+      if (this.scrollableDotsWidth > 0 && this.dotsWrapper) {
+        this.centerActiveDot();
+      }
     }
 
     /**
@@ -142,6 +156,67 @@
       controls.forEach(control => {
         control.disabled = !enabled;
         control.setAttribute('aria-disabled', !enabled);
+      });
+    }
+
+    /**
+     * Initialize scrollable dots container.
+     */
+    initScrollableDots() {
+      if (!this.dotsWrapper || this.scrollableDotsWidth <= 0) {
+        return;
+      }
+
+      // Apply max-width from configuration
+      this.applyScrollableDotsWidth();
+
+      // Initial center of active dot
+      requestAnimationFrame(() => {
+        this.centerActiveDot();
+      });
+    }
+
+    /**
+     * Apply scrollable dots container width from configuration.
+     */
+    applyScrollableDotsWidth() {
+      if (!this.dotsWrapper || this.scrollableDotsWidth <= 0) {
+        return;
+      }
+
+      // Apply the configured width directly
+      this.dotsWrapper.style.maxWidth = `${this.scrollableDotsWidth}px`;
+      this.dotsWrapper.style.justifyContent = 'flex-start';
+    }
+
+    /**
+     * Center the active dot in the scrollable container.
+     */
+    centerActiveDot() {
+      if (!this.dotsWrapper || this.scrollableDotsWidth <= 0) {
+        return;
+      }
+
+      const activeDot = this.dotsWrapper.querySelector('.dots-numbers-button.active');
+      if (!activeDot) {
+        return;
+      }
+
+      const containerWidth = this.dotsWrapper.offsetWidth;
+      const dotOffsetLeft = activeDot.offsetLeft;
+      const dotWidth = activeDot.offsetWidth;
+
+      // Calculate scroll position to center the active dot
+      const scrollTarget = dotOffsetLeft - (containerWidth / 2) + (dotWidth / 2);
+
+      // Clamp scroll position to valid range
+      const maxScroll = this.dotsWrapper.scrollWidth - containerWidth;
+      const clampedScroll = Math.max(0, Math.min(scrollTarget, maxScroll));
+
+      // Smooth scroll to the target position
+      this.dotsWrapper.scrollTo({
+        left: clampedScroll,
+        behavior: 'smooth'
       });
     }
   }

@@ -108,3 +108,22 @@ views.style.views_vvjs:
       constraints:
         Range:
           min: 1
+    transition_type:
+      type: string
+      label: 'Slide transition type'
+      constraints:
+        Choice: ['instant', 'crossfade-classic', 'crossfade-staged', 'crossfade-dynamic']
+    transition_duration:
+      type: integer
+      label: 'Transition duration in milliseconds'
+      constraints:
+        Range:
+          min: 200
+          max: 2000
+    scrollable_dots_width:
+      type: integer
+      label: 'Scrollable navigation width in pixels'
+      constraints:
+        Range:
+          min: 0
+          max: 700

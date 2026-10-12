@@ -1,0 +1,31 @@
+# Basic GitLab CI for VVJS Drupal module.
+# https://docs.gitlab.com/ee/ci/yaml/
+
+stages:
+  - lint
+  - test
+
+variables:
+  PHP_VERSION: "8.2"
+
+# Lint PHP files for syntax errors.
+lint:php:
+  stage: lint
+  image: php:${PHP_VERSION}-cli
+  script:
+    - find src tests -name "*.php" -exec php -l {} \;
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Run PHPUnit tests (requires Drupal core; enable when running in full Drupal context).
+test:phpunit:
+  stage: test
+  image: php:${PHP_VERSION}-cli
+  script:
+    - echo "PHPUnit tests would run here with Drupal core present."
+    - exit 0
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  allow_failure: true

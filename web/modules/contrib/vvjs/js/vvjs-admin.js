@@ -1,15 +1,37 @@
 /**
  * @file
- * Handles form field visibility toggles in Views UI.
+ * Handles form field visibility toggles and opacity range display in Views UI.
  *
- * Filename:     vvjb-admin.js
+ * Filename:     vvjs-admin.js
  * Website:      https://www.flashwebcenter.com
  * Developer:    Alaa Haddad https://www.alaahaddad.com.
  *
  */
 
-(function (Drupal, once) {
+(function (Drupal, drupalSettings, once) {
   'use strict';
+
+  /**
+   * Sync overlay opacity range input value to the displayed span (CSP-safe).
+   */
+  Drupal.behaviors.vvjsOpacityRange = {
+    attach: function (context) {
+      const rangeInputs = once('vvjs-opacity-range', '[data-vvjs-opacity-range="true"]', context);
+
+      rangeInputs.forEach(function (input) {
+        const valueEl = input.closest('.form-item')?.querySelector('.opacity-value')
+          || context.querySelector(drupalSettings.vvjs?.opacityValueSelector || '#background-opacity-value');
+        if (!valueEl) {
+          return;
+        }
+        const updateValue = function () {
+          valueEl.textContent = input.value;
+        };
+        updateValue();
+        input.addEventListener('input', updateValue);
+      });
+    },
+  };
 
   /**
    * Toggle deep link identifier field visibility.
@@ -72,4 +94,4 @@
     }
   };
 
-})(Drupal, once);
+})(Drupal, drupalSettings, once);

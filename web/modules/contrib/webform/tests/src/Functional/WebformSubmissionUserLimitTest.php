@@ -15,9 +15,9 @@ class WebformSubmissionUserLimitTest extends WebformBrowserTestBase {
    * @var array
    */
   protected static $modules = [
-    'webform',
     'path',
     'user',
+    'webform',
   ];
 
   /**
@@ -26,7 +26,10 @@ class WebformSubmissionUserLimitTest extends WebformBrowserTestBase {
   public function testSubmissionUserLimitAuthenticatedUser(): void {
 
     // Create a webform with one checkbox field.
-    $this->drupalLogin($this->createUser(['administer webform']));
+    $this->drupalLogin($this->createUser([
+      'administer webform',
+      'edit webform source',
+    ]));
     $this->drupalGet('/admin/structure/webform/add');
     $this->submitForm([
       'id' => 'test_webform',
@@ -82,7 +85,10 @@ class WebformSubmissionUserLimitTest extends WebformBrowserTestBase {
    */
   public function testSubmissionUserLimitAnonymousUser(): void {
     // Create a webform with one checkbox field.
-    $this->drupalLogin($this->createUser(['administer webform']));
+    $this->drupalLogin($this->createUser([
+      'administer webform',
+      'edit webform source',
+    ]));
     $this->drupalGet('/admin/structure/webform/add');
     $this->submitForm([
       'id' => 'test_webform',

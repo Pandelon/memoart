@@ -4,98 +4,35 @@ declare(strict_types=1);
 
 namespace Drupal\vvjs\Plugin\views\style;
 
-use Drupal\views\Plugin\views\field\EntityField;
-use Drupal\vvjs\VvjsConstants;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Transliteration\PhpTransliteration;
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsStyle;
 use Drupal\views\Plugin\views\style\StylePluginBase;
+use Drupal\vvjs\VvjsConstants;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Style plugin to render items in a Slideshow using vanilla JavaScript.
  *
  * @ingroup views_style_plugins
- *
- * @ViewsStyle(
- *   id = "views_vvjs",
- *   title = @Translation("Views Vanilla JavaScript Slideshow"),
- *   help = @Translation("Render items in a Slideshow using vanilla JavaScript."),
- *   theme = "views_view_vvjs",
- *   display_types = { "normal" }
- * )
  */
+#[ViewsStyle(
+  id: "views_vvjs",
+  title: new TranslatableMarkup("Views Vanilla JavaScript Slideshow"),
+  help: new TranslatableMarkup("Render items in a Slideshow using vanilla JavaScript."),
+  theme: "views_view_vvjs",
+  display_types: ["normal"],
+)]
 class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
-   * Animation type constants.
+   * The transliteration service.
+   *
+   * @var \Drupal\Core\Transliteration\PhpTransliteration
    */
-  public const ANIMATION_NONE = 'none';
-  public const ANIMATION_ZOOM = 'a-zoom';
-  public const ANIMATION_FADE = 'a-fade';
-  public const ANIMATION_TOP = 'a-top';
-  public const ANIMATION_BOTTOM = 'a-bottom';
-  public const ANIMATION_LEFT = 'a-left';
-  public const ANIMATION_RIGHT = 'a-right';
-
-  /**
-   * Breakpoint constants.
-   */
-  public const BREAKPOINT_576 = '576';
-  public const BREAKPOINT_768 = '768';
-  public const BREAKPOINT_992 = '992';
-  public const BREAKPOINT_1200 = '1200';
-  public const BREAKPOINT_1400 = '1400';
-
-  /**
-   * Arrow position constants.
-   */
-  public const ARROWS_NONE = 'none';
-  public const ARROWS_SIDES = 'arrows-sides';
-  public const ARROWS_SIDES_BIG = 'arrows-sides-big';
-  public const ARROWS_TOP = 'arrows-top';
-  public const ARROWS_TOP_BIG = 'arrows-top-big';
-
-  /**
-   * Navigation type constants.
-   */
-  public const NAV_NONE = 'none';
-  public const NAV_DOTS = 'dots';
-  public const NAV_NUMBERS = 'numbers';
-
-  /**
-   * Overlay position constants.
-   */
-  public const OVERLAY_FULL = 'd-full';
-  public const OVERLAY_MIDDLE = 'd-middle';
-  public const OVERLAY_LEFT = 'd-left';
-  public const OVERLAY_RIGHT = 'd-right';
-  public const OVERLAY_TOP = 'd-top';
-  public const OVERLAY_BOTTOM = 'd-bottom';
-  public const OVERLAY_TOP_LEFT = 'd-top-left';
-  public const OVERLAY_TOP_RIGHT = 'd-top-right';
-  public const OVERLAY_BOTTOM_LEFT = 'd-bottom-left';
-  public const OVERLAY_BOTTOM_RIGHT = 'd-bottom-right';
-  public const OVERLAY_TOP_MIDDLE = 'd-top-middle';
-  public const OVERLAY_BOTTOM_MIDDLE = 'd-bottom-middle';
-
-  /**
-   * Timing constants.
-   */
-  public const TIMING_MIN = 2000;
-  public const TIMING_MAX = 15000;
-  public const TIMING_DEFAULT = 5000;
-
-  /**
-   * Size constraints.
-   */
-  public const MIN_WIDTH = 1;
-  public const MAX_WIDTH = 9999;
-  public const MIN_HEIGHT = 1;
-  public const MAX_HEIGHT = 200;
-  public const MIN_CONTENT_WIDTH = 1;
-  public const MAX_CONTENT_WIDTH = 100;
-  public const DEFAULT_MAX_WIDTH = 1200;
-  public const DEFAULT_MIN_HEIGHT = 40;
-  public const DEFAULT_CONTENT_WIDTH = 60;
+  protected PhpTransliteration $transliteration;
 
   /**
    * Does the style plugin use a row plugin.
@@ -103,6 +40,40 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    * @var bool
    */
   protected $usesRowPlugin = TRUE;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('transliteration'),
+    );
+  }
+
+  /**
+   * Constructs a ViewsVanillaJavascriptSlideshow plugin.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Transliteration\PhpTransliteration $transliteration
+   *   The transliteration service.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    PhpTransliteration $transliteration,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->transliteration = $transliteration;
+  }
 
   /**
    * {@inheritdoc}
@@ -118,25 +89,32 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Options lifecycle: Options are defined here with defaults. The form is
+   * built in buildOptionsForm() with nested sections (hero_slideshow_section,
+   * timing_section, etc.). On submit, flattenFormValues() maps nested form
+   * values back to these flat option keys. Validation runs in
+   * validateFormValues() and in validateDeeplinkIdentifier() for the deep link
+   * field.
    */
   protected function defineOptions(): array {
     $options = parent::defineOptions();
-    $options['time_in_seconds'] = ['default' => self::TIMING_DEFAULT];
-    $options['navigation'] = ['default' => self::NAV_DOTS];
-    $options['animation'] = ['default' => self::ANIMATION_BOTTOM];
+    $options['time_in_seconds'] = ['default' => VvjsConstants::TIMING_DEFAULT];
+    $options['navigation'] = ['default' => VvjsConstants::NAV_DOTS];
+    $options['animation'] = ['default' => VvjsConstants::ANIMATION_BOTTOM];
     $options['transition_type'] = ['default' => VvjsConstants::TRANSITION_INSTANT];
     $options['transition_duration'] = ['default' => VvjsConstants::TRANSITION_DURATION_DEFAULT];
-    $options['arrows'] = ['default' => self::ARROWS_TOP];
+    $options['arrows'] = ['default' => VvjsConstants::ARROWS_TOP];
     $options['unique_id'] = ['default' => $this->generateUniqueId()];
     $options['hero_slideshow'] = ['default' => FALSE];
     $options['overlay_bg_color'] = ['default' => '#000000'];
-    $options['overlay_bg_opacity'] = ['default' => '0.3'];
-    $options['available_breakpoints'] = ['default' => self::BREAKPOINT_576];
+    $options['overlay_bg_opacity'] = ['default' => 0.3];
+    $options['available_breakpoints'] = ['default' => VvjsConstants::BREAKPOINT_576];
     $options['enable_css'] = ['default' => TRUE];
-    $options['min_height'] = ['default' => self::DEFAULT_MIN_HEIGHT];
-    $options['max_content_width'] = ['default' => self::DEFAULT_CONTENT_WIDTH];
-    $options['max_width'] = ['default' => self::DEFAULT_MAX_WIDTH];
-    $options['overlay_position'] = ['default' => self::OVERLAY_MIDDLE];
+    $options['min_height'] = ['default' => VvjsConstants::DEFAULT_MIN_HEIGHT];
+    $options['max_content_width'] = ['default' => VvjsConstants::DEFAULT_CONTENT_WIDTH];
+    $options['max_width'] = ['default' => VvjsConstants::DEFAULT_MAX_WIDTH];
+    $options['overlay_position'] = ['default' => VvjsConstants::OVERLAY_MIDDLE];
     $options['show_total_slides'] = ['default' => FALSE];
     $options['show_slide_progress'] = ['default' => FALSE];
     $options['show_play_pause'] = ['default' => TRUE];
@@ -147,6 +125,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     $options['start_index'] = ['default' => 1];
     $options['enable_deeplink'] = ['default' => FALSE];
     $options['deeplink_identifier'] = ['default' => ''];
+    $options['scrollable_dots_width'] = ['default' => VvjsConstants::DEFAULT_SCROLLABLE_DOTS_WIDTH];
     return $options;
   }
 
@@ -233,7 +212,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Hero Slideshow'),
       '#default_value' => $this->options['hero_slideshow'] ?? FALSE,
-      '#description' => $this->t('Enable this option to create a Hero Slideshow. A Hero Slideshow is a prominent, full-width slideshow often used at the top of a webpage to showcase key content or visuals. It typically features large images with overlaying text or buttons. Note: This requires the row style to be set and the first field in the row to be an image. Additional configuration options will be available once this option is enabled.'),
+      '#description' => $this->t('Enable this option to create a Hero Slideshow. A Hero Slideshow is a prominent, full-width slideshow often used at the top of a webpage to showcase key content or visuals. It typically features large images with overlaying text or buttons. Note: This requires the row style to be set and the first field in the row to be an Image or Media field. Additional configuration options will be available once this option is enabled.'),
     ];
 
     $this->buildHeroLayoutOptions($form);
@@ -263,31 +242,31 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     $form['hero_slideshow_section']['layout']['max_width'] = [
       '#type' => 'number',
       '#title' => $this->t('Max Width (px)'),
-      '#default_value' => $this->options['max_width'] ?? self::DEFAULT_MAX_WIDTH,
+      '#default_value' => $this->options['max_width'] ?? VvjsConstants::DEFAULT_MAX_WIDTH,
       '#description' => $this->t('Defines the maximum width for the main container of the hero content, typically set in pixels.'),
       '#step' => 1,
-      '#min' => self::MIN_WIDTH,
-      '#max' => self::MAX_WIDTH,
+      '#min' => VvjsConstants::VIEWS_MIN_WIDTH,
+      '#max' => VvjsConstants::VIEWS_MAX_WIDTH,
     ];
 
     $form['hero_slideshow_section']['layout']['min_height'] = [
       '#type' => 'number',
       '#title' => $this->t('Min Height (vw)'),
-      '#default_value' => $this->options['min_height'] ?? self::DEFAULT_MIN_HEIGHT,
+      '#default_value' => $this->options['min_height'] ?? VvjsConstants::DEFAULT_MIN_HEIGHT,
       '#description' => $this->t('Specifies the minimum height for the entire hero container, set in viewport width units (vw).'),
       '#step' => 1,
-      '#min' => self::MIN_HEIGHT,
-      '#max' => self::MAX_HEIGHT,
+      '#min' => VvjsConstants::VIEWS_MIN_HEIGHT,
+      '#max' => VvjsConstants::VIEWS_MAX_HEIGHT,
     ];
 
     $form['hero_slideshow_section']['layout']['max_content_width'] = [
       '#type' => 'number',
       '#title' => $this->t('Content Width (%)'),
-      '#default_value' => $this->options['max_content_width'] ?? self::DEFAULT_CONTENT_WIDTH,
+      '#default_value' => $this->options['max_content_width'] ?? VvjsConstants::DEFAULT_CONTENT_WIDTH,
       '#description' => $this->t('Determines the width for the remaining fields within the hero section.'),
       '#step' => 1,
-      '#min' => self::MIN_CONTENT_WIDTH,
-      '#max' => self::MAX_CONTENT_WIDTH,
+      '#min' => VvjsConstants::VIEWS_MIN_CONTENT_WIDTH,
+      '#max' => VvjsConstants::VIEWS_MAX_CONTENT_WIDTH,
     ];
 
   }
@@ -316,7 +295,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'select',
       '#title' => $this->t('Overlay Position'),
       '#options' => $this->getOverlayPositionOptions(),
-      '#default_value' => $this->options['overlay_position'] ?? self::OVERLAY_MIDDLE,
+      '#default_value' => $this->options['overlay_position'] ?? VvjsConstants::OVERLAY_MIDDLE,
       '#description' => $this->t('Select the position where the content overlay will appear within the hero section.'),
     ];
 
@@ -330,14 +309,14 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     $form['hero_slideshow_section']['overlay']['overlay_bg_opacity'] = [
       '#type' => 'range',
       '#title' => $this->t('Overlay Background Opacity'),
-      '#default_value' => $this->options['overlay_bg_opacity'] ?? '0.3',
+      '#default_value' => $this->options['overlay_bg_opacity'] ?? 0.3,
       '#min' => 0,
       '#max' => 1,
       '#step' => 0.1,
       '#description' => $this->t('Adjust the opacity of the overlay background color for the hero section content. A lower value makes the background more transparent, while a higher value makes it more opaque.'),
-      '#suffix' => '<span id="background-opacity-value" class="opacity-value">' . ($this->options['overlay_bg_opacity'] ?? '0.3') . '</span>',
+      '#suffix' => '<span id="background-opacity-value" class="opacity-value">' . ($this->options['overlay_bg_opacity'] ?? 0.3) . '</span>',
       '#attributes' => [
-        'oninput' => 'document.getElementById("background-opacity-value").innerText = this.value;',
+        'data-vvjs-opacity-range' => 'true',
       ],
     ];
   }
@@ -360,7 +339,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'select',
       '#title' => $this->t('Auto-advance Time'),
       '#options' => $this->getTimingOptions(),
-      '#default_value' => $this->options['time_in_seconds'] ?? self::TIMING_DEFAULT,
+      '#default_value' => $this->options['time_in_seconds'] ?? VvjsConstants::TIMING_DEFAULT,
       '#description' => $this->t('By default, the Slideshow scrolls every 5 seconds. You can modify this interval. If set between 3-15 seconds, a play/pause button appears and the slideshow pauses on mouse hover. To stop the slideshow, set the field value to none.'),
     ];
   }
@@ -383,7 +362,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'select',
       '#title' => $this->t('Slide Navigation Arrows'),
       '#options' => $this->getArrowOptions(),
-      '#default_value' => $this->options['arrows'] ?? self::ARROWS_TOP,
+      '#default_value' => $this->options['arrows'] ?? VvjsConstants::ARROWS_TOP,
       '#description' => $this->t('Side arrows appear beside the slide. Top arrows appear above the slide with low opacity (0.3) and become fully visible on hover. Options marked "big screen only" will only display on screens wider than the selected breakpoint.'),
     ];
 
@@ -391,8 +370,28 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'select',
       '#title' => $this->t('Slide Indicators (Bottom Navigation Dots/Numbers)'),
       '#options' => $this->getNavigationOptions(),
-      '#default_value' => $this->options['navigation'] ?? self::NAV_DOTS,
+      '#default_value' => $this->options['navigation'] ?? VvjsConstants::NAV_DOTS,
       '#description' => $this->t('Show the bottom slide navigation dots/numbers. <strong>Note: This feature is required by Deep Linking.</strong>'),
+    ];
+
+    $form['navigation_section']['scrollable_dots_width'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Scrollable navigation width (px)'),
+      '#default_value' => $this->options['scrollable_dots_width'] ?? VvjsConstants::DEFAULT_SCROLLABLE_DOTS_WIDTH,
+      '#min' => 0,
+      '#max' => VvjsConstants::MAX_SCROLLABLE_DOTS_WIDTH,
+      '#step' => 1,
+      '#field_suffix' => 'px',
+      '#description' => $this->t('Set a maximum width for the navigation to make it scrollable. Set to 0 to disable. Range: @min-@max px.', [
+        '@min' => VvjsConstants::MIN_SCROLLABLE_DOTS_WIDTH,
+        '@max' => VvjsConstants::MAX_SCROLLABLE_DOTS_WIDTH,
+      ]),
+      '#states' => [
+        'visible' => [
+          [':input[name="style_options[navigation_section][navigation]"]' => ['value' => VvjsConstants::NAV_DOTS]],
+          [':input[name="style_options[navigation_section][navigation]"]' => ['value' => VvjsConstants::NAV_NUMBERS]],
+        ],
+      ],
     ];
   }
 
@@ -414,7 +413,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'select',
       '#title' => $this->t('Slide Animation Type'),
       '#options' => $this->getAnimationOptions(),
-      '#default_value' => $this->options['animation'] ?? self::ANIMATION_BOTTOM,
+      '#default_value' => $this->options['animation'] ?? VvjsConstants::ANIMATION_BOTTOM,
       '#description' => $this->t('Choose the animation type for the slides. When set to "None", transition options become available.'),
     ];
 
@@ -427,7 +426,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#description' => $this->t('Select the transition effect between slides. Available only when Slide Animation Type is set to "None".'),
       '#states' => [
         'visible' => [
-          ':input[name="style_options[animation_section][animation]"]' => ['value' => self::ANIMATION_NONE],
+          ':input[name="style_options[animation_section][animation]"]' => ['value' => VvjsConstants::ANIMATION_NONE],
         ],
       ],
     ];
@@ -443,7 +442,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#field_suffix' => $this->t('ms'),
       '#states' => [
         'visible' => [
-          ':input[name="style_options[animation_section][animation]"]' => ['value' => self::ANIMATION_NONE],
+          ':input[name="style_options[animation_section][animation]"]' => ['value' => VvjsConstants::ANIMATION_NONE],
           ':input[name="style_options[animation_section][transition_type]"]' => [
             ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
             ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
@@ -465,73 +464,8 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       </div>'),
       '#states' => [
         'visible' => [
-          ':input[name="style_options[animation_section][animation]"]' => ['value' => self::ANIMATION_NONE],
+          ':input[name="style_options[animation_section][animation]"]' => ['value' => VvjsConstants::ANIMATION_NONE],
           ':input[name="style_options[animation_section][transition_type]"]' => [
-            ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
-            ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
-            ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
-          ],
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Build slide transitions section.
-   *
-   * @param array $form
-   *   The form array (passed by reference).
-   */
-  protected function buildTransitionsSection(array &$form): void {
-    $form['transitions_section'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Slide Transitions'),
-      '#description' => $this->t('Control how slides transition from one to another. Crossfade creates smooth blending between slides using CSS transitions.'),
-      '#open' => FALSE,
-      '#weight' => -9,
-    ];
-
-    $form['transitions_section']['transition_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Transition Type'),
-      '#options' => $this->getTransitionOptions(),
-      '#default_value' => $this->options['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT,
-      '#description' => $this->t('Select the transition effect between slides.'),
-    ];
-
-    $form['transitions_section']['transition_duration'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Transition Duration'),
-      '#description' => $this->t('Duration of the crossfade transition in milliseconds. Recommended: 400-800ms.'),
-      '#default_value' => $this->options['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT,
-      '#min' => VvjsConstants::TRANSITION_DURATION_MIN,
-      '#max' => VvjsConstants::TRANSITION_DURATION_MAX,
-      '#step' => 50,
-      '#field_suffix' => $this->t('ms'),
-      '#states' => [
-        'visible' => [
-          ':input[name="style_options[transitions_section][transition_type]"]' => [
-            ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
-            ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
-            ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
-          ],
-        ],
-      ],
-    ];
-
-    $form['transitions_section']['transition_help'] = [
-      '#type' => 'item',
-      '#markup' => $this->t('<div class="vvjs-transitions-help"><strong>Transition Types Explained:</strong><ul>
-        <li><strong>Instant:</strong> No transition effect (default, backward compatible)</li>
-        <li><strong>Crossfade - Classic:</strong> Both slides fade at the same speed simultaneously (most common)</li>
-        <li><strong>Crossfade - Staged:</strong> Outgoing fades quickly, incoming fades slowly with overlap (elegant, smooth)</li>
-        <li><strong>Crossfade - Dynamic:</strong> Fast fade-out, slow fade-in (energetic, attention-grabbing)</li>
-      </ul>
-      <p><strong>Performance Note:</strong> All crossfade effects use GPU-accelerated CSS transitions. Users with "prefers-reduced-motion" enabled will automatically see instant transitions.</p>
-      </div>'),
-      '#states' => [
-        'visible' => [
-          ':input[name="style_options[transitions_section][transition_type]"]' => [
             ['value' => VvjsConstants::TRANSITION_CROSSFADE_CLASSIC],
             ['value' => VvjsConstants::TRANSITION_CROSSFADE_STAGED],
             ['value' => VvjsConstants::TRANSITION_CROSSFADE_DYNAMIC],
@@ -704,7 +638,6 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    *   The form array (passed by reference).
    */
   protected function attachFormAssets(array &$form): void {
-    $form['#attached']['library'][] = 'core/drupal.ajax';
     $form['#attached']['library'][] = 'vvjs/vvjs-opacity';
     $form['#attached']['library'][] = 'vvjs/vvjs-admin';
 
@@ -722,13 +655,13 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    */
   protected function getAnimationOptions(): array {
     return [
-      self::ANIMATION_NONE => $this->t('None'),
-      self::ANIMATION_ZOOM => $this->t('Zoom'),
-      self::ANIMATION_FADE => $this->t('Fade'),
-      self::ANIMATION_TOP => $this->t('Slide from Top'),
-      self::ANIMATION_BOTTOM => $this->t('Slide from Bottom'),
-      self::ANIMATION_LEFT => $this->t('Slide from Left'),
-      self::ANIMATION_RIGHT => $this->t('Slide from Right'),
+      VvjsConstants::ANIMATION_NONE => $this->t('None'),
+      VvjsConstants::ANIMATION_ZOOM => $this->t('Zoom'),
+      VvjsConstants::ANIMATION_FADE => $this->t('Fade'),
+      VvjsConstants::ANIMATION_TOP => $this->t('Slide from Top'),
+      VvjsConstants::ANIMATION_BOTTOM => $this->t('Slide from Bottom'),
+      VvjsConstants::ANIMATION_LEFT => $this->t('Slide from Left'),
+      VvjsConstants::ANIMATION_RIGHT => $this->t('Slide from Right'),
     ];
   }
 
@@ -766,7 +699,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       '#type' => 'select',
       '#title' => $this->t('Responsive breakpoint'),
       '#options' => $this->getBreakpointOptions(),
-      '#default_value' => $this->options['available_breakpoints'] ?? self::BREAKPOINT_576,
+      '#default_value' => $this->options['available_breakpoints'] ?? VvjsConstants::BREAKPOINT_576,
       '#description' => $this->t('Select the viewport width at which the slideshow switches to its compact responsive layout.'),
     ];
   }
@@ -830,7 +763,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
     // Get navigation setting (Slide Indicators).
     $navigation_values = $form_state->getValue(['style_options', 'navigation_section']) ?? [];
-    $navigation = $navigation_values['navigation'] ?? self::NAV_DOTS;
+    $navigation = $navigation_values['navigation'] ?? VvjsConstants::NAV_DOTS;
 
     // 1. If deep linking is disabled, ignore identifier and exit early.
     if (!$enable_deeplink) {
@@ -840,7 +773,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     }
 
     // 2. Deep linking is enabled → require navigation ≠ none.
-    if ($navigation === self::NAV_NONE) {
+    if ($navigation === VvjsConstants::NAV_NONE) {
       $form_state->setError(
         $element,
         $this->t('Deep Linking requires Slide Indicators (Dots or Numbers) to be enabled. Please set "Slide Indicators (Bottom Navigation Dots/Numbers)" to Dots or Numbers, or disable Deep Linking.')
@@ -857,8 +790,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     }
 
     // Transliterate and clean similar to URL aliases.
-    $transliteration = \Drupal::transliteration();
-    $clean = $transliteration->transliterate($identifier, 'en');
+    $clean = $this->transliteration->transliterate($identifier, 'en');
 
     // Convert to lowercase.
     $clean = strtolower($clean);
@@ -905,11 +837,11 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    */
   protected function getBreakpointOptions(): array {
     return [
-      self::BREAKPOINT_576 => $this->t('576px / 36rem'),
-      self::BREAKPOINT_768 => $this->t('768px / 48rem'),
-      self::BREAKPOINT_992 => $this->t('992px / 62rem'),
-      self::BREAKPOINT_1200 => $this->t('1200px / 75rem'),
-      self::BREAKPOINT_1400 => $this->t('1400px / 87.5rem'),
+      VvjsConstants::BREAKPOINT_576 => $this->t('576px / 36rem'),
+      VvjsConstants::BREAKPOINT_768 => $this->t('768px / 48rem'),
+      VvjsConstants::BREAKPOINT_992 => $this->t('992px / 62rem'),
+      VvjsConstants::BREAKPOINT_1200 => $this->t('1200px / 75rem'),
+      VvjsConstants::BREAKPOINT_1400 => $this->t('1400px / 87.5rem'),
     ];
   }
 
@@ -921,11 +853,11 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    */
   protected function getArrowOptions(): array {
     return [
-      self::ARROWS_NONE => $this->t('None'),
-      self::ARROWS_SIDES => $this->t('Show arrows on the sides'),
-      self::ARROWS_SIDES_BIG => $this->t('Show arrows on the sides (big screen only)'),
-      self::ARROWS_TOP => $this->t('Show arrows at the top of the slide'),
-      self::ARROWS_TOP_BIG => $this->t('Show arrows at the top of the slide (big screen only)'),
+      VvjsConstants::ARROWS_NONE => $this->t('None'),
+      VvjsConstants::ARROWS_SIDES => $this->t('Show arrows on the sides'),
+      VvjsConstants::ARROWS_SIDES_BIG => $this->t('Show arrows on the sides (big screen only)'),
+      VvjsConstants::ARROWS_TOP => $this->t('Show arrows at the top of the slide'),
+      VvjsConstants::ARROWS_TOP_BIG => $this->t('Show arrows at the top of the slide (big screen only)'),
     ];
   }
 
@@ -937,9 +869,9 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    */
   protected function getNavigationOptions(): array {
     return [
-      self::NAV_NONE => $this->t('None'),
-      self::NAV_DOTS => $this->t('Dots'),
-      self::NAV_NUMBERS => $this->t('Numbers'),
+      VvjsConstants::NAV_NONE => $this->t('None'),
+      VvjsConstants::NAV_DOTS => $this->t('Dots'),
+      VvjsConstants::NAV_NUMBERS => $this->t('Numbers'),
     ];
   }
 
@@ -951,18 +883,18 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
    */
   protected function getOverlayPositionOptions(): array {
     return [
-      self::OVERLAY_FULL => $this->t('Full Width'),
-      self::OVERLAY_MIDDLE => $this->t('Middle'),
-      self::OVERLAY_LEFT => $this->t('Left'),
-      self::OVERLAY_RIGHT => $this->t('Right'),
-      self::OVERLAY_TOP => $this->t('Top'),
-      self::OVERLAY_BOTTOM => $this->t('Bottom'),
-      self::OVERLAY_TOP_LEFT => $this->t('Top Left'),
-      self::OVERLAY_TOP_RIGHT => $this->t('Top Right'),
-      self::OVERLAY_BOTTOM_LEFT => $this->t('Bottom Left'),
-      self::OVERLAY_BOTTOM_RIGHT => $this->t('Bottom Right'),
-      self::OVERLAY_TOP_MIDDLE => $this->t('Top Middle'),
-      self::OVERLAY_BOTTOM_MIDDLE => $this->t('Bottom Middle'),
+      VvjsConstants::OVERLAY_FULL => $this->t('Full Width'),
+      VvjsConstants::OVERLAY_MIDDLE => $this->t('Middle'),
+      VvjsConstants::OVERLAY_LEFT => $this->t('Left'),
+      VvjsConstants::OVERLAY_RIGHT => $this->t('Right'),
+      VvjsConstants::OVERLAY_TOP => $this->t('Top'),
+      VvjsConstants::OVERLAY_BOTTOM => $this->t('Bottom'),
+      VvjsConstants::OVERLAY_TOP_LEFT => $this->t('Top Left'),
+      VvjsConstants::OVERLAY_TOP_RIGHT => $this->t('Top Right'),
+      VvjsConstants::OVERLAY_BOTTOM_LEFT => $this->t('Bottom Left'),
+      VvjsConstants::OVERLAY_BOTTOM_RIGHT => $this->t('Bottom Right'),
+      VvjsConstants::OVERLAY_TOP_MIDDLE => $this->t('Top Middle'),
+      VvjsConstants::OVERLAY_BOTTOM_MIDDLE => $this->t('Bottom Middle'),
     ];
   }
 
@@ -1023,30 +955,30 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
 
     if (isset($hero_values['layout']['max_width'])) {
       $max_width = (int) $hero_values['layout']['max_width'];
-      if ($max_width < self::MIN_WIDTH || $max_width > self::MAX_WIDTH) {
+      if ($max_width < VvjsConstants::VIEWS_MIN_WIDTH || $max_width > VvjsConstants::VIEWS_MAX_WIDTH) {
         $errors[] = $this->t('Max Width must be between @min and @max pixels.', [
-          '@min' => self::MIN_WIDTH,
-          '@max' => self::MAX_WIDTH,
+          '@min' => VvjsConstants::VIEWS_MIN_WIDTH,
+          '@max' => VvjsConstants::VIEWS_MAX_WIDTH,
         ]);
       }
     }
 
     if (isset($hero_values['layout']['min_height'])) {
       $min_height = (int) $hero_values['layout']['min_height'];
-      if ($min_height < self::MIN_HEIGHT || $min_height > self::MAX_HEIGHT) {
+      if ($min_height < VvjsConstants::VIEWS_MIN_HEIGHT || $min_height > VvjsConstants::VIEWS_MAX_HEIGHT) {
         $errors[] = $this->t('Min Height must be between @min and @max vw.', [
-          '@min' => self::MIN_HEIGHT,
-          '@max' => self::MAX_HEIGHT,
+          '@min' => VvjsConstants::VIEWS_MIN_HEIGHT,
+          '@max' => VvjsConstants::VIEWS_MAX_HEIGHT,
         ]);
       }
     }
 
     if (isset($hero_values['layout']['max_content_width'])) {
       $content_width = (int) $hero_values['layout']['max_content_width'];
-      if ($content_width < self::MIN_CONTENT_WIDTH || $content_width > self::MAX_CONTENT_WIDTH) {
+      if ($content_width < VvjsConstants::VIEWS_MIN_CONTENT_WIDTH || $content_width > VvjsConstants::VIEWS_MAX_CONTENT_WIDTH) {
         $errors[] = $this->t('Content Width must be between @min and @max percent.', [
-          '@min' => self::MIN_CONTENT_WIDTH,
-          '@max' => self::MAX_CONTENT_WIDTH,
+          '@min' => VvjsConstants::VIEWS_MIN_CONTENT_WIDTH,
+          '@max' => VvjsConstants::VIEWS_MAX_CONTENT_WIDTH,
         ]);
       }
     }
@@ -1073,6 +1005,16 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       if (!empty($display_values['show_play_pause'])) {
         $errors[] = $this->t('Play/pause button requires auto-advance timing to be enabled.');
       }
+    }
+
+    // Validate scrollable_dots_width when set.
+    $navigation_values = $values['style_options']['navigation_section'] ?? [];
+    $scrollable_dots_width = (int) ($navigation_values['scrollable_dots_width'] ?? 0);
+    if ($scrollable_dots_width > 0 && ($scrollable_dots_width < VvjsConstants::MIN_SCROLLABLE_DOTS_WIDTH || $scrollable_dots_width > VvjsConstants::MAX_SCROLLABLE_DOTS_WIDTH)) {
+      $errors[] = $this->t('Scrollable navigation width must be 0 (disabled) or between @min and @max pixels.', [
+        '@min' => VvjsConstants::MIN_SCROLLABLE_DOTS_WIDTH,
+        '@max' => VvjsConstants::MAX_SCROLLABLE_DOTS_WIDTH,
+      ]);
     }
 
     return $errors;
@@ -1107,20 +1049,20 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       $flattened['hero_slideshow'] = $hero['hero_slideshow'] ?? FALSE;
 
       if (isset($hero['layout'])) {
-        $flattened['max_width'] = $hero['layout']['max_width'] ?? self::DEFAULT_MAX_WIDTH;
-        $flattened['min_height'] = $hero['layout']['min_height'] ?? self::DEFAULT_MIN_HEIGHT;
-        $flattened['max_content_width'] = $hero['layout']['max_content_width'] ?? self::DEFAULT_CONTENT_WIDTH;
+        $flattened['max_width'] = (int) ($hero['layout']['max_width'] ?? VvjsConstants::DEFAULT_MAX_WIDTH);
+        $flattened['min_height'] = (int) ($hero['layout']['min_height'] ?? VvjsConstants::DEFAULT_MIN_HEIGHT);
+        $flattened['max_content_width'] = (int) ($hero['layout']['max_content_width'] ?? VvjsConstants::DEFAULT_CONTENT_WIDTH);
       }
 
       if (isset($hero['overlay'])) {
-        $flattened['overlay_position'] = $hero['overlay']['overlay_position'] ?? self::OVERLAY_MIDDLE;
+        $flattened['overlay_position'] = $hero['overlay']['overlay_position'] ?? VvjsConstants::OVERLAY_MIDDLE;
         $flattened['overlay_bg_color'] = $hero['overlay']['overlay_bg_color'] ?? '#000000';
-        $flattened['overlay_bg_opacity'] = $hero['overlay']['overlay_bg_opacity'] ?? '0.3';
+        $flattened['overlay_bg_opacity'] = (float) ($hero['overlay']['overlay_bg_opacity'] ?? 0.3);
       }
     }
 
     if (isset($values['responsive_section']['available_breakpoints'])) {
-      $flattened['available_breakpoints'] = $values['responsive_section']['available_breakpoints'] ?? self::BREAKPOINT_576;
+      $flattened['available_breakpoints'] = $values['responsive_section']['available_breakpoints'] ?? VvjsConstants::BREAKPOINT_576;
     }
 
     if (isset($values['deeplink_section'])) {
@@ -1129,22 +1071,23 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
     }
 
     if (isset($values['timing_section'])) {
-      $flattened['time_in_seconds'] = $values['timing_section']['time_in_seconds'] ?? self::TIMING_DEFAULT;
+      $flattened['time_in_seconds'] = (int) ($values['timing_section']['time_in_seconds'] ?? VvjsConstants::TIMING_DEFAULT);
     }
 
     if (isset($values['navigation_section'])) {
-      $flattened['arrows'] = $values['navigation_section']['arrows'] ?? self::ARROWS_TOP;
-      $flattened['navigation'] = $values['navigation_section']['navigation'] ?? self::NAV_DOTS;
+      $flattened['arrows'] = $values['navigation_section']['arrows'] ?? VvjsConstants::ARROWS_TOP;
+      $flattened['navigation'] = $values['navigation_section']['navigation'] ?? VvjsConstants::NAV_DOTS;
+      $flattened['scrollable_dots_width'] = (int) ($values['navigation_section']['scrollable_dots_width'] ?? VvjsConstants::DEFAULT_SCROLLABLE_DOTS_WIDTH);
     }
 
     if (isset($values['animation_section'])) {
-      $animation = $values['animation_section']['animation'] ?? self::ANIMATION_BOTTOM;
+      $animation = $values['animation_section']['animation'] ?? VvjsConstants::ANIMATION_BOTTOM;
       $flattened['animation'] = $animation;
 
       // Only preserve transition values when animation is "none".
-      if ($animation === self::ANIMATION_NONE) {
+      if ($animation === VvjsConstants::ANIMATION_NONE) {
         $flattened['transition_type'] = $values['animation_section']['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT;
-        $flattened['transition_duration'] = $values['animation_section']['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT;
+        $flattened['transition_duration'] = (int) ($values['animation_section']['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT);
       }
       else {
         // Clear transition values when animation is not "none".
@@ -1192,14 +1135,7 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
       return $this->cachedUniqueId;
     }
 
-    $this->cachedUniqueId = random_int(10000000, 99999999);
-
-    if ($this->cachedUniqueId < 10000000) {
-      $this->cachedUniqueId += 10000000;
-    }
-    if ($this->cachedUniqueId > 99999999) {
-      $this->cachedUniqueId = $this->cachedUniqueId % 90000000 + 10000000;
-    }
+    $this->cachedUniqueId = random_int(VvjsConstants::UNIQUE_ID_MIN, VvjsConstants::UNIQUE_ID_MAX);
 
     return $this->cachedUniqueId;
   }
@@ -1244,12 +1180,12 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   protected function buildLibraryList(): array {
     $libraries = [
       'vvjs/vvjs',
-      'vvjs/vvjs__' . ($this->options['available_breakpoints'] ?? self::BREAKPOINT_576),
+      'vvjs/vvjs__' . ($this->options['available_breakpoints'] ?? VvjsConstants::BREAKPOINT_576),
     ];
 
     if (!empty($this->options['hero_slideshow'])) {
       $libraries[] = 'vvjs/vvjs-hero';
-      $libraries[] = 'vvjs/vvjs-hero__' . ($this->options['available_breakpoints'] ?? self::BREAKPOINT_576);
+      $libraries[] = 'vvjs/vvjs-hero__' . ($this->options['available_breakpoints'] ?? VvjsConstants::BREAKPOINT_576);
     }
 
     if (!empty($this->options['enable_css'])) {
@@ -1271,59 +1207,18 @@ class ViewsVanillaJavascriptSlideshow extends StylePluginBase {
   public function validate(): array {
     $errors = parent::validate();
 
-    if (!empty($this->options['hero_slideshow'])) {
-      // Check if using fields.
-      if (!$this->usesFields()) {
-        $errors[] = $this->t('Hero Slideshow option requires Fields as row style.');
-      }
-      else {
-        // Check if first field is an image.
-        $fields = $this->view->display_handler->getHandlers('field');
-
-        if (empty($fields)) {
-          $errors[] = $this->t('Hero Slideshow requires at least one field to be configured.');
-        }
-        else {
-          $first_field = reset($fields);
-          $is_image = FALSE;
-
-          // Check if it's an EntityField (not a global or custom field).
-          if ($first_field instanceof EntityField) {
-            // Get field name from the field's definition.
-            $field_name = $first_field->definition['field_name'] ?? NULL;
-
-            if ($field_name) {
-              // Get the entity type from the view.
-              $entity_type_id = $this->view->getBaseEntityType()->id();
-
-              // Use entity field manager service to get
-              // field storage definitions.
-              $entity_field_manager = \Drupal::service('entity_field.manager');
-              $field_storage_definitions = $entity_field_manager->getFieldStorageDefinitions($entity_type_id);
-
-              // Check if this field exists and is an image type.
-              if (isset($field_storage_definitions[$field_name])) {
-                $field_type = $field_storage_definitions[$field_name]->getType();
-                $is_image = ($field_type === 'image');
-              }
-            }
-          }
-
-          if (!$is_image) {
-            $errors[] = $this->t('Hero Slideshow requires the first field to be an Image field. Please add an image field as the first field in your Fields configuration.');
-          }
-        }
-      }
+    if (empty($this->options['hero_slideshow'])) {
+      return $errors;
     }
 
-    $timing = $this->options['time_in_seconds'] ?? '0';
-    if ($timing === '0') {
-      if (!empty($this->options['show_slide_progress'])) {
-        $errors[] = $this->t('Slide progress indicator requires auto-advance timing to be enabled (cannot be "None").');
-      }
-      if (!empty($this->options['show_play_pause'])) {
-        $errors[] = $this->t('Play/pause button requires auto-advance timing to be enabled (cannot be "None").');
-      }
+    if (!$this->usesFields()) {
+      $errors[] = $this->t('Hero Slideshow requires Fields as the row style.');
+      return $errors;
+    }
+
+    $fields = $this->view->display_handler->getHandlers('field');
+    if (empty($fields)) {
+      $errors[] = $this->t('Hero Slideshow requires at least one field to be configured.');
     }
 
     return $errors;

@@ -10,7 +10,7 @@
  *
  *
  * VVJS-Specific Behavior:
- * - First field: Rendered as hero background (usually an image)
+ * - First field: Rendered as hero background (image or video)
  * - Separator: Divides first field from content fields
  * - Remaining fields: Rendered as overlay content with full formatting
  *
@@ -134,11 +134,4 @@
 #}
 
 {# Handle edge case: no fields at all (shouldn't happen but prevents errors) #}
-{% if not has_fields %}
-  <!-- VVJS: No fields available for rendering -->
-{% endif %}
-
 {# Handle edge case: only one field (render without separator) #}
-{% if total_fields == 1 and has_first_field %}
-  <!-- VVJS: Single field rendered above without separator -->
-{% endif %}

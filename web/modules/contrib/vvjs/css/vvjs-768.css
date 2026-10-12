@@ -9,7 +9,8 @@
 @media (min-width:48rem) {
   .vvjs.br-768.arrows-sides-big .vvjs-items,
   .vvjs.br-768.arrows-sides-big .nav-dots-numbers,
-  .vvjs.br-768.hero-slideshow.arrows-sides-big .vvjs-item .vvjs-hero-image img {
+  .vvjs.br-768.hero-slideshow.arrows-sides-big .vvjs-item .vvjs-hero-image img,
+  .vvjs.br-768.hero-slideshow.arrows-sides-big .vvjs-item .vvjs-hero-image video {
     width: calc(100% - 100px) !important;
     margin-inline-end: 50px !important;
     margin-inline-start: 50px !important;

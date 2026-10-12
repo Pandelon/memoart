@@ -16,7 +16,6 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Markup;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Template\Attribute;
 use Drupal\vvjs\Plugin\views\style\ViewsVanillaJavascriptSlideshow;
 use Drupal\vvjs\VvjsConstants;
 
@@ -135,40 +134,11 @@ function template_preprocess_views_view_vvjs(array &$variables): void {
 
   $options = $handler->options ?? [];
 
-  $variables['list_attributes'] = _vvjs_build_data_attributes($options);
   $variables['background_rgb'] = _vvjs_calculate_background_rgb($options);
-  $variables['settings'] = _vvjs_build_template_settings($handler, $options);
 
   _vvjs_customize_row_theme_suggestions($variables);
 
   template_preprocess_views_view_unformatted($variables);
-}
-
-/**
- * Build data attributes array from slideshow options.
- *
- * @param array $options
- *   The slideshow configuration options.
- *
- * @return \Drupal\Core\Template\Attribute
- *   Attribute object containing data attributes.
- */
-function _vvjs_build_data_attributes(array $options): Attribute {
-  $list_attributes = [];
-
-  foreach (VvjsConstants::DATA_ATTRIBUTE_MAP as $option_key => $data_key) {
-    if (!empty($options[$option_key])) {
-      $list_attributes[VvjsConstants::DATA_ATTRIBUTE_PREFIX . $data_key] = $options[$option_key];
-    }
-  }
-
-  foreach (VvjsConstants::BOOLEAN_ATTRIBUTE_MAP as $option_key => $data_key) {
-    if (isset($options[$option_key])) {
-      $list_attributes[VvjsConstants::DATA_ATTRIBUTE_PREFIX . $data_key] = $options[$option_key] ? 'true' : 'false';
-    }
-  }
-
-  return new Attribute($list_attributes);
 }
 
 /**
@@ -199,40 +169,6 @@ function _vvjs_calculate_background_rgb(array $options): ?string {
     ]);
     return NULL;
   }
-}
-
-/**
- * Build template settings array.
- *
- * @param object $handler
- *   The style plugin handler.
- * @param array $options
- *   The slideshow configuration options.
- *
- * @return array
- *   Settings array for template use.
- */
-function _vvjs_build_template_settings(object $handler, array $options): array {
-  $view_id = $handler->view->dom_id ?? 'unknown';
-
-  return [
-    'view_id' => $view_id,
-    'animation' => $options['animation'] ?? '',
-    'time_in_seconds' => $options['time_in_seconds'] ?? 0,
-    'navigation' => $options['navigation'] ?? '',
-    'arrows' => $options['arrows'] ?? '',
-    'unique_id' => $options['unique_id'] ?? 0,
-    'available_breakpoints' => $options['available_breakpoints'] ?? '',
-    'enable_css' => $options['enable_css'] ?? TRUE,
-    'min_height' => $options['min_height'] ?? 0,
-    'max_content_width' => $options['max_content_width'] ?? 0,
-    'max_width' => $options['max_width'] ?? 0,
-    'hero_slideshow' => $options['hero_slideshow'] ?? FALSE,
-    'enable_deeplink' => $options['enable_deeplink'] ?? FALSE,
-    'deeplink_identifier' => $options['deeplink_identifier'] ?? '',
-    'transition_type' => $options['transition_type'] ?? VvjsConstants::TRANSITION_INSTANT,
-    'transition_duration' => $options['transition_duration'] ?? VvjsConstants::TRANSITION_DURATION_DEFAULT,
-  ];
 }
 
 /**

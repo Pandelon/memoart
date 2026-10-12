@@ -35,18 +35,19 @@
 
 {# Core slideshow identifiers - preserved for CSS/JS compatibility #}
 {% set slideshow_config = {
-  unique_id: options.unique_id|default(0),
-  slide_id: 'vvjs-' ~ (options.unique_id|default(0)),
-  slide_inner_id: 'vvjs-inner-' ~ (options.unique_id|default(0)),
+  unique_id: options.unique_id,
+  slide_id: 'vvjs-' ~ options.unique_id,
+  slide_inner_id: 'vvjs-inner-' ~ options.unique_id,
 } %}
 
 {# Navigation and interaction settings #}
 {% set navigation_config = {
-  arrows: options.arrows|default('none'),
-  navigation: options.navigation|default('none'),
-  show_total_slides: options.show_total_slides|default(false),
-  show_play_pause: options.show_play_pause|default(false),
-  show_slide_progress: options.show_slide_progress|default(false),
+  arrows: options.arrows,
+  navigation: options.navigation,
+  show_total_slides: options.show_total_slides,
+  show_play_pause: options.show_play_pause,
+  show_slide_progress: options.show_slide_progress,
+  scrollable_dots_width: options.scrollable_dots_width,
 } %}
 
 {# Behavior settings - use same default pattern as navigation_config #}
@@ -55,36 +56,36 @@
   enable_swipe: options.enable_swipe,
   enable_keyboard: options.enable_keyboard,
   enable_looping: options.enable_looping,
-  start_index: options.start_index|default(1),
+  start_index: options.start_index,
 } %}
 
 {# Timing and animation settings #}
 {% set animation_config = {
-  time_in_seconds: options.time_in_seconds|default(0),
-  animation: options.animation|default(''),
-  is_static: (options.time_in_seconds|default(0)) == 0,
+  time_in_seconds: options.time_in_seconds,
+  animation: options.animation,
+  is_static: options.time_in_seconds == 0,
 } %}
 
 {# Hero slideshow specific settings #}
 {% set hero_config = {
-  enabled: options.hero_slideshow|default(false),
-  max_width: options.max_width|default(1200),
-  min_height: options.min_height|default(40),
-  max_content_width: options.max_content_width|default(60),
-  overlay_position: options.overlay_position|default('d-middle'),
+  enabled: options.hero_slideshow,
+  max_width: options.max_width,
+  min_height: options.min_height,
+  max_content_width: options.max_content_width,
+  overlay_position: options.overlay_position,
   background_rgb: background_rgb|default(null),
 } %}
 
 {# Deep linking configuration #}
 {% set deeplink_config = {
-  enabled: options.enable_deeplink|default(false),
-  identifier: options.deeplink_identifier|default(''),
+  enabled: options.enable_deeplink,
+  identifier: options.deeplink_identifier,
 } %}
 
 {# Transition settings #}
 {% set transition_config = {
-  type: settings.transition_type|default('instant'),
-  duration: settings.transition_duration|default(600),
+  type: options.transition_type,
+  duration: options.transition_duration,
 } %}
 
 {# Calculate total slides once for efficiency #}
@@ -167,10 +168,15 @@
   {% if navigation_config.navigation != 'none' %}
   {# Calculate effective start index - clamp to total slides #}
   {% set total = rows|length %}
-  {% set effective_start = behavior_config.start_index|default(1) %}
+  {% set effective_start = behavior_config.start_index %}
   {% set effective_start = effective_start > total ? total : effective_start %}
   {% set effective_start = effective_start < 1 ? 1 : effective_start %}
-  <div class="dots-numbers-button-wrapper" role="tablist" aria-label="{{ 'Slideshow Tabs'|t }}">
+  <div class="dots-numbers-button-wrapper{{ navigation_config.scrollable_dots_width > 0 ? ' vvjs-scrollable-dots' : '' }}"
+       role="tablist"
+       aria-label="{{ 'Slideshow Tabs'|t }}"
+       {% if navigation_config.scrollable_dots_width > 0 %}
+       data-scrollable-dots-width="{{ navigation_config.scrollable_dots_width }}"
+       {% endif %}>
     {% for row in rows %}
       {% set is_active = loop.index == effective_start %}
       {% if deeplink_config.enabled and deeplink_config.identifier and navigation_config.navigation != 'none' %}

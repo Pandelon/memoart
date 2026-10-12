@@ -13,7 +13,7 @@
     ],
     "homepage": "https://drupal.org/project/vvjs",
     "require": {
-        "drupal/core": "*"
+        "drupal/core": "^10 || ^11"
     },
     "support": {
         "issues": "https://drupal.org/project/issues/vvjs",

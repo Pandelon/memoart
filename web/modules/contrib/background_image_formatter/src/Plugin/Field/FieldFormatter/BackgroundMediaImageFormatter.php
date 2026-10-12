@@ -2,12 +2,13 @@
 
 namespace Drupal\background_image_formatter\Plugin\Field\FieldFormatter;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Field\Annotation\FieldFormatter;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceEntityFormatter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\image\Entity\ImageStyle;
-use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceEntityFormatter;
-use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Plugin implementation of the background_media_image_formatter.
@@ -28,6 +29,8 @@ class BackgroundMediaImageFormatter extends EntityReferenceEntityFormatter {
       'image_style' => '',
       'background_image_output_type' => 'inline',
       'background_image_selector' => '',
+      'background_image_link' => FALSE,
+      'background_image_link_custom' => '',
     ];
   }
 
@@ -69,6 +72,42 @@ class BackgroundMediaImageFormatter extends EntityReferenceEntityFormatter {
       '#description' => $this->t('CSS selector that image(s) are attached to.'),
     ];
 
+    $element['background_image_link'] = [
+      '#title' => $this->t('Link image to content'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->getSetting('background_image_link'),
+      '#states' => [
+        'visible' => [
+          'select[name*="background_image_output_type"]' => ['value' => 'inline'],
+        ],
+      ],
+    ];
+
+    $element['background_image_link_custom'] = [
+      '#title' => $this->t('Custom link'),
+      '#type' => 'textfield',
+      '#default_value' => $this->getSetting('background_image_link_custom'),
+      '#states' => [
+        'visible' => [
+          'select[name*="background_image_output_type"]' => ['value' => 'inline'],
+          'input[name*="background_image_link"]' => ['checked' => TRUE],
+        ],
+      ],
+      '#description' => $this->t("Link to use. Leave empty for the content's URL. Can contain tokens when Token module is enabled."),
+    ];
+
+    if (\Drupal::moduleHandler()->moduleExists('token')) {
+      $element['tokens'] = [
+        '#theme' => 'token_tree_link',
+        '#token_types' => 'all',
+        '#global_types' => TRUE,
+        '#click_insert' => TRUE,
+        '#show_restricted' => FALSE,
+        '#recursion_limit' => 3,
+        '#text' => $this->t('Browse available tokens'),
+      ];
+    }
+
     return $element;
 
   }
@@ -94,6 +133,13 @@ class BackgroundMediaImageFormatter extends EntityReferenceEntityFormatter {
     }
 
     $summary[] = $this->t('Output type: @output_type', ['@output_type' => $this->getSetting('background_image_output_type')]);
+
+    if ($this->getSetting('background_image_link')) {
+      $summary[] = $this->t('Linked to content');
+      if ($this->getSetting('background_image_link_custom')) {
+        $summary[] = $this->t('Custom link: @link', ['@link' => $this->getSetting('background_image_link_custom')]);
+      }
+    }
 
     $summary[] = $this->t('The CSS selector <code>@background_image_selector</code> will be created with the image set to the background-image property.', [
       '@background_image_selector' => $this->getSetting('background_image_selector') . '_id',
@@ -155,9 +201,16 @@ class BackgroundMediaImageFormatter extends EntityReferenceEntityFormatter {
           $selector .= '_' . $id;
         }
 
+        $host_entity = $items->getEntity();
+
         $theme = [
           '#background_image_selector' => $selector,
           '#image_uri' => $image_uri,
+          '#entity_type' => $host_entity->getEntityTypeId(),
+          '#entity_bundle' => $host_entity->bundle(),
+          '#entity' => $host_entity,
+          '#field_name' => $items->getName(),
+          '#delta' => $delta,
         ];
 
         switch ($this->getSetting('background_image_output_type')) {
@@ -176,6 +229,10 @@ class BackgroundMediaImageFormatter extends EntityReferenceEntityFormatter {
             break;
 
           case 'inline':
+
+            if ($url = $this->getBackgroundImageLinkUrl($items)) {
+              $theme['#url'] = $url;
+            }
 
             $theme['#theme'] = 'background_image_formatter_inline';
 
@@ -203,6 +260,39 @@ class BackgroundMediaImageFormatter extends EntityReferenceEntityFormatter {
    */
   protected function generateCssString($theme) {
     return $theme['#background_image_selector'] . ' {background-image: url("' . $theme['#image_uri'] . '");}';
+  }
+
+  /**
+   * Builds the configured link URL for inline background image output.
+   *
+   * @param \Drupal\Core\Field\FieldItemListInterface $items
+   *   The field items being rendered.
+   *
+   * @return string|null
+   *   The URL string, or NULL when no link should be rendered.
+   */
+  protected function getBackgroundImageLinkUrl(FieldItemListInterface $items) {
+    if (!$this->getSetting('background_image_link')) {
+      return NULL;
+    }
+
+    $entity = $items->getEntity();
+    $custom_link = trim((string) $this->getSetting('background_image_link_custom'));
+
+    if ($custom_link !== '') {
+      if (\Drupal::moduleHandler()->moduleExists('token')) {
+        $custom_link = \Drupal::service('token')->replace($custom_link, [
+          $entity->getEntityTypeId() => $entity,
+        ]);
+      }
+      return UrlHelper::stripDangerousProtocols($custom_link);
+    }
+
+    if (!$entity->isNew() && $entity->hasLinkTemplate('canonical')) {
+      return $entity->toUrl()->toString();
+    }
+
+    return NULL;
   }
 
   /**

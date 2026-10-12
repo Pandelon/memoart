@@ -30,11 +30,6 @@ final class VvjsConstants {
   public const TOKEN_PATTERN = '/^[a-zA-Z0-9_]+(:plain)?$/';
 
   /**
-   * Data attribute prefix for HTML attributes.
-   */
-  public const DATA_ATTRIBUTE_PREFIX = 'data-';
-
-  /**
    * Maximum length for deep link identifier.
    */
   public const DEEPLINK_IDENTIFIER_MAX_LENGTH = 20;
@@ -53,41 +48,6 @@ final class VvjsConstants {
    * Default opacity value.
    */
   public const DEFAULT_OPACITY = 1;
-
-  /**
-   * Data attribute mapping for slideshow options.
-   *
-   * Maps internal option keys to HTML data attribute names.
-   */
-  public const DATA_ATTRIBUTE_MAP = [
-    'animation' => 'animation',
-    'navigation' => 'navigation',
-    'time_in_seconds' => 'time-in-seconds',
-    'arrows' => 'arrows',
-    'unique_id' => 'unique-id',
-    'available_breakpoints' => 'available-breakpoints',
-    'min_height' => 'min-height',
-    'max_content_width' => 'max-content-width',
-    'max_width' => 'max-width',
-    'start_index' => 'start-index',
-  ];
-
-  /**
-   * Boolean option mapping for slideshow controls.
-   *
-   * Maps internal boolean option keys to HTML data attribute names.
-   */
-  public const BOOLEAN_ATTRIBUTE_MAP = [
-    'show_play_pause' => 'show-play-pause',
-    'show_slide_progress' => 'show-slide-animation',
-    'show_total_slides' => 'show-total-slides',
-    'hero_slideshow' => 'hero-slideshow',
-    'enable_css' => 'enable-css',
-    'pause_on_hover' => 'pause-on-hover',
-    'enable_swipe' => 'enable-swipe',
-    'enable_keyboard' => 'enable-keyboard',
-    'enable_looping' => 'enable-looping',
-  ];
 
   /**
    * Views integration field type constants.
@@ -114,18 +74,89 @@ final class VvjsConstants {
   public const VIEWS_TYPE_FLOAT = 'float';
 
   /**
-   * Views validation constraint constants.
-   */
-
-  /**
-   * Minimum time value in milliseconds.
+   * Timing constants.
+   *
+   * VIEWS_MIN_TIME (0) = disabled/static slideshow.
+   * TIMING_MIN_ACTIVE = minimum when auto-advance is on.
    */
   public const VIEWS_MIN_TIME = 0;
+  public const TIMING_DISABLED = 0;
+  public const TIMING_MIN_ACTIVE = 2000;
+  public const TIMING_DEFAULT = 5000;
 
   /**
    * Maximum time value in milliseconds.
    */
   public const VIEWS_MAX_TIME = 15000;
+
+  /**
+   * Animation type constants.
+   */
+  public const ANIMATION_NONE = 'none';
+  public const ANIMATION_ZOOM = 'a-zoom';
+  public const ANIMATION_FADE = 'a-fade';
+  public const ANIMATION_TOP = 'a-top';
+  public const ANIMATION_BOTTOM = 'a-bottom';
+  public const ANIMATION_LEFT = 'a-left';
+  public const ANIMATION_RIGHT = 'a-right';
+
+  /**
+   * Breakpoint constants.
+   */
+  public const BREAKPOINT_576 = '576';
+  public const BREAKPOINT_768 = '768';
+  public const BREAKPOINT_992 = '992';
+  public const BREAKPOINT_1200 = '1200';
+  public const BREAKPOINT_1400 = '1400';
+
+  /**
+   * Arrow position constants.
+   */
+  public const ARROWS_NONE = 'none';
+  public const ARROWS_SIDES = 'arrows-sides';
+  public const ARROWS_SIDES_BIG = 'arrows-sides-big';
+  public const ARROWS_TOP = 'arrows-top';
+  public const ARROWS_TOP_BIG = 'arrows-top-big';
+
+  /**
+   * Navigation type constants.
+   */
+  public const NAV_NONE = 'none';
+  public const NAV_DOTS = 'dots';
+  public const NAV_NUMBERS = 'numbers';
+
+  /**
+   * Overlay position constants.
+   */
+  public const OVERLAY_FULL = 'd-full';
+  public const OVERLAY_MIDDLE = 'd-middle';
+  public const OVERLAY_LEFT = 'd-left';
+  public const OVERLAY_RIGHT = 'd-right';
+  public const OVERLAY_TOP = 'd-top';
+  public const OVERLAY_BOTTOM = 'd-bottom';
+  public const OVERLAY_TOP_LEFT = 'd-top-left';
+  public const OVERLAY_TOP_RIGHT = 'd-top-right';
+  public const OVERLAY_BOTTOM_LEFT = 'd-bottom-left';
+  public const OVERLAY_BOTTOM_RIGHT = 'd-bottom-right';
+  public const OVERLAY_TOP_MIDDLE = 'd-top-middle';
+  public const OVERLAY_BOTTOM_MIDDLE = 'd-bottom-middle';
+
+  /**
+   * Default layout/size values.
+   */
+  public const DEFAULT_MAX_WIDTH = 1200;
+  public const DEFAULT_MIN_HEIGHT = 40;
+  public const DEFAULT_CONTENT_WIDTH = 60;
+
+  /**
+   * Unique ID range for slideshow instances.
+   */
+  public const UNIQUE_ID_MIN = 10000000;
+  public const UNIQUE_ID_MAX = 99999999;
+
+  /**
+   * Views validation constraint constants.
+   */
 
   /**
    * Minimum height value in viewport width units.
@@ -181,6 +212,13 @@ final class VvjsConstants {
   public const TRANSITION_DURATION_MIN = 200;
   public const TRANSITION_DURATION_MAX = 2000;
   public const TRANSITION_DURATION_DEFAULT = 600;
+
+  /**
+   * Scrollable dots configuration constants.
+   */
+  public const DEFAULT_SCROLLABLE_DOTS_WIDTH = 0;
+  public const MIN_SCROLLABLE_DOTS_WIDTH = 120;
+  public const MAX_SCROLLABLE_DOTS_WIDTH = 700;
 
   /**
    * Private constructor to prevent instantiation.

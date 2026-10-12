@@ -42,7 +42,7 @@ designed to work seamlessly with the VVJS rendering system.
 
 ## Requirements
 
-- Drupal 10
+- Drupal 10 or 11
 - Views module
 
 ## Installation
