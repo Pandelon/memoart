@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Theme override for the front page (moni2026).
+ *
+ * @see template_preprocess_page()
+ * @see html.html.twig
+ */
+#}
+{% include '@moni2026/layout/moni2026-header.html.twig' %}
+
+<main role="main">
+  <a id="main-content" tabindex="-1"></a>{# link is in html.html.twig #}
+
+  <div class="{{ b5_top_container }}">
+    <div class="front1">
+      <div class="container">
+        {{ page.front_first }}
+      </div>
+    </div><div class="front2">
+      <div class="container">
+        {{ page.front_second }}
+      </div>
+    </div><div class="front3">
+      <div class="container">
+        {{ page.front_third }}
+      </div>
+    </div>
+  </div>
+</main>
+
+{% include '@moni2026/layout/moni2026-footer.html.twig' %}

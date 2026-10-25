@@ -1,0 +1,23 @@
+moni2026.settings:
+  type: theme_settings
+  label: 'moni2026 theme settings'
+  mapping:
+    b5_body_schema: { type: string, label: 'Body theme' }
+    b5_body_bg_schema: { type: string, label: 'Body background' }
+    b5_navbar_schema: { type: string, label: 'Navbar theme' }
+    b5_navbar_bg_schema: { type: string, label: 'Navbar background' }
+    b5_footer_schema: { type: string, label: 'Footer theme' }
+    b5_footer_bg_schema: { type: string, label: 'Footer background' }
+    b5_top_container: { type: string, label: 'Website container type' }
+    b5_top_container_config: { type: string, label: 'Website container type configuration' }
+    b5_theme_mode: { type: string, label: 'Theme mode' }
+    b4_top_container: { type: string, label: 'Legacy: container type' }
+    b4_body_schema: { type: string, label: 'Legacy: body theme' }
+    b4_body_bg_schema: { type: string, label: 'Legacy: body background' }
+    b4_navbar_schema: { type: string, label: 'Legacy: navbar theme' }
+    b4_navbar_bg_schema: { type: string, label: 'Legacy: navbar background' }
+    b4_footer_schema: { type: string, label: 'Legacy: footer theme' }
+    b4_footer_bg_schema: { type: string, label: 'Legacy: footer background' }
+    subtheme_folder: { type: string, label: 'Subtheme folder' }
+    subtheme_name: { type: string, label: 'Subtheme name' }
+    subtheme_machine_name: { type: string, label: 'Subtheme machine name' }

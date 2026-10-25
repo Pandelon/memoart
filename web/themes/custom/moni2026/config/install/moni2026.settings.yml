@@ -1,0 +1,8 @@
+b5_body_schema: none
+b5_body_bg_schema: none
+b5_navbar_schema: light
+b5_navbar_bg_schema: none
+b5_footer_schema: none
+b5_footer_bg_schema: dark
+b5_top_container: 'container-fluid m-0 p-0'
+b5_top_container_config: ''

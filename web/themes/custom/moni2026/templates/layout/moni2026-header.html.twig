@@ -1,0 +1,39 @@
+{#
+/**
+ * @file
+ * Shared header partial for page templates (moni2026).
+ *
+ * Same markup as the memo/bootstrap5 navbar, but the collapse is driven by a
+ * CSS-only checkbox instead of the Bootstrap collapse plugin.
+ */
+#}
+{%
+set nav_classes = 'navbar navbar-expand-lg' ~
+  (b5_navbar_schema != 'none' ? " navbar-#{b5_navbar_schema}" : ' ') ~
+  (b5_navbar_schema != 'none' ? (b5_navbar_schema == 'dark' ? ' text-light' : ' text-dark' ) : ' ') ~
+  (b5_navbar_bg_schema != 'none' ? " bg-#{b5_navbar_bg_schema}" : ' ')
+%}
+<header role="banner">
+  {{ page.header }}
+
+  {% if page.nav_branding or page.nav_main or page.nav_additional %}
+  <nav class="{{ nav_classes }}">
+    <div class="{{ b5_top_container }} d-flex">
+      {{ page.nav_branding }}
+
+      {% if page.nav_main or page.nav_additional %}
+        <input type="checkbox" id="moni-navbar-toggle" class="navbar-toggler-check visually-hidden" aria-controls="navbarSupportedContent">
+        <label for="moni-navbar-toggle" class="navbar-toggler">
+          <span class="navbar-toggler-icon"></span>
+          <span class="visually-hidden">{{ 'Toggle navigation'|t }}</span>
+        </label>
+
+        <div class="collapse navbar-collapse justify-content-md-end" id="navbarSupportedContent">
+          {{ page.nav_main }}
+          {{ page.nav_additional }}
+        </div>
+      {% endif %}
+    </div>
+  </nav>
+  {% endif %}
+</header>

@@ -1,0 +1,315 @@
+/**
+ * @file
+ * moni2026 – Drupal-specific rules from the bootstrap5 base theme
+ * (bootstrap5/scss/drupal/*), rewritten without Bootstrap variables.
+ */
+
+/* Buttons spacing (_buttons.scss). */
+.btn,
+.button,
+a.button,
+button.link {
+  margin: 0 0.5rem;
+}
+
+.btn:first-child,
+.button:first-child,
+button.link:first-child {
+  margin-left: 0;
+}
+
+.btn:last-child,
+.button:last-child,
+button.link:last-child {
+  margin-right: 0;
+}
+
+a.button {
+  text-decoration: none;
+}
+
+button.link {
+  color: var(--moni-link);
+}
+
+.btn-primary a,
+.btn-secondary a,
+.btn-success a,
+.btn-danger a,
+.btn-dark a {
+  color: #fff;
+}
+
+.btn-info a,
+.btn-warning a,
+.btn-light a {
+  color: #000;
+}
+
+.btn-primary a:hover,
+.btn-secondary a:hover,
+.btn-success a:hover,
+.btn-danger a:hover,
+.btn-dark a:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.btn-info a:hover,
+.btn-warning a:hover,
+.btn-light a:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+/* Forms (_forms.scss). */
+.form-control.image-button {
+  width: unset;
+}
+
+.form-control.form-checkbox,
+.form-control.form-radio {
+  display: inline-block;
+  width: unset;
+  height: auto;
+}
+
+.form-select {
+  min-width: 5rem;
+}
+
+input.form-text {
+  margin-top: 0;
+}
+
+input[type="search"] {
+  box-sizing: border-box;
+}
+
+.container-inline div,
+.container-inline label {
+  display: inline-block;
+  margin: 0;
+}
+
+td > .form-item {
+  margin: 0;
+}
+
+#search-block-form {
+  display: flex;
+}
+
+.form-type-datetime label {
+  display: block;
+}
+
+/* Navbar (_navbar.scss). */
+.navbar .block-search form {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+@media (min-width: 576px) {
+  .navbar .block-search form {
+    flex-direction: row;
+  }
+}
+
+.navbar .block-search form .form-actions {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .navbar .block-search form .form-actions {
+    margin-top: 0;
+    margin-left: 0.5rem;
+  }
+}
+
+.navbar-nav .nav-link {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.navbar-nav .nav-link.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  white-space: unset;
+}
+
+.navbar-brand .site-slogan {
+  display: none;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 992px) {
+  .navbar-brand .site-slogan {
+    display: block;
+  }
+}
+
+.navbar-brand a.site-title,
+.navbar-brand a.site-title:hover {
+  color: #212529;
+  text-decoration: none;
+}
+
+.navbar-brand .site-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.navbar-brand img {
+  width: auto;
+  height: 36px;
+  margin: 0 1rem 0 0;
+}
+
+@media (min-width: 992px) {
+  .navbar-brand img {
+    height: 60px;
+  }
+}
+
+.navbar-dark .navbar-brand a.site-title,
+.footer-dark .navbar-brand a.site-title,
+.navbar-dark .navbar-brand a.site-title:hover,
+.footer-dark .navbar-brand a.site-title:hover {
+  color: #f8f9fa;
+  text-decoration: none;
+}
+
+/* Footer (_footer.scss). */
+footer {
+  padding: 2rem 0;
+}
+
+footer.footer-dark a,
+footer.footer-dark a:hover {
+  color: #f8f9fa;
+  text-decoration: none;
+}
+
+footer .region-footer {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Regions (_regions.scss, _layout.scss). */
+.region-sidebar-first,
+.region-sidebar-second,
+.region-footer,
+.region-content {
+  padding: 0 0.5rem;
+}
+
+.region-nav-branding,
+.region-nav-additional {
+  flex-shrink: 0;
+}
+
+@media (min-width: 992px) {
+  .region-nav-additional {
+    display: flex;
+  }
+}
+
+/* Local tasks (_local_tasks.scss). */
+.tabs-primary {
+  margin: 1rem 0;
+}
+
+.tabs-secondary {
+  margin: 0 0 1rem;
+}
+
+@media (max-width: 767.98px) {
+  .tabs-wrapper .tab-toggle {
+    padding: 0.5rem 1rem;
+    color: var(--moni-emphasis);
+  }
+
+  .tabs-wrapper .nav-tabs {
+    overflow: hidden;
+    border: 1px solid var(--moni-border);
+    border-radius: var(--moni-radius);
+  }
+
+  .tabs-wrapper .nav-item {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .tabs-wrapper .nav-item.active {
+    background-color: #dee2e6;
+  }
+
+  .tabs-wrapper .nav-item .nav-link {
+    flex-grow: 1;
+    background-color: unset;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .tabs-wrapper:not(.is-collapsible) .nav-item:not(:first-of-type) {
+    border-top: 1px solid var(--moni-border);
+  }
+
+  .tabs-wrapper.is-collapsible .nav-item.active {
+    display: flex;
+    order: -1;
+  }
+
+  .tabs-wrapper.is-collapsible .nav-item:not(.active) {
+    display: none;
+  }
+
+  .tabs-wrapper.is-collapsible .is-open .nav-item {
+    display: flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .tabs-wrapper .tab-toggle {
+    display: none;
+  }
+}
+
+/* Misc (_table.scss, _views.scss, _misc.scss). */
+table {
+  caption-side: unset;
+}
+
+.progress {
+  display: block;
+}
+
+.pagination {
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+em.placeholder {
+  display: unset;
+  min-height: unset;
+  vertical-align: unset;
+  cursor: unset;
+  background-color: unset;
+  opacity: unset;
+}
+
+.alert-dismissible .close {
+  color: #000;
+}
+
+code {
+  overflow-y: auto;
+}

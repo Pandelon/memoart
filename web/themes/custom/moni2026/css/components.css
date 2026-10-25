@@ -1,0 +1,791 @@
+/**
+ * @file
+ * moni2026 – components rendered by the bootstrap5 base templates.
+ *
+ * Navbar collapse and dropdowns work without JavaScript:
+ * - collapse: checkbox (.navbar-toggler-check) + label (.navbar-toggler),
+ * - dropdown: :hover / :focus-within (the <nolink> parent is a focusable
+ *   span, see templates/navigation/menu--main.html.twig).
+ */
+
+/* Navbar. */
+.navbar {
+  --moni-navbar-color: rgba(0, 0, 0, 0.65);
+  --moni-navbar-hover-color: rgba(0, 0, 0, 0.8);
+  --moni-navbar-active-color: #000;
+  --moni-navbar-brand-color: #000;
+  --moni-navbar-toggler-border: rgba(0, 0, 0, 0.15);
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.navbar-dark {
+  --moni-navbar-color: rgba(255, 255, 255, 0.55);
+  --moni-navbar-hover-color: rgba(255, 255, 255, 0.75);
+  --moni-navbar-active-color: #fff;
+  --moni-navbar-brand-color: #fff;
+  --moni-navbar-toggler-border: rgba(255, 255, 255, 0.1);
+}
+
+.navbar > .container,
+.navbar > .container-fluid {
+  display: flex;
+  flex-wrap: inherit;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  padding-top: 0.3125rem;
+  padding-bottom: 0.3125rem;
+  margin-right: 1rem;
+  font-size: 1.25rem;
+  color: var(--moni-navbar-brand-color);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar-brand:hover,
+.navbar-brand:focus {
+  color: var(--moni-navbar-brand-color);
+}
+
+.navbar-nav {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.nav-link {
+  display: block;
+  padding: 0.5rem 0;
+  color: var(--moni-nav-link-color);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  color: var(--moni-nav-link-hover-color);
+}
+
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link.show {
+  color: var(--moni-navbar-active-color);
+}
+
+.navbar-collapse {
+  flex-basis: 100%;
+  flex-grow: 1;
+  align-items: center;
+}
+
+.collapse:not(.show) {
+  display: none;
+}
+
+.navbar-toggler {
+  padding: 0.25rem 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--moni-navbar-color);
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid var(--moni-navbar-toggler-border);
+  border-radius: var(--moni-radius);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.navbar-toggler:hover {
+  text-decoration: none;
+}
+
+.navbar-toggler-check:focus-visible + .navbar-toggler {
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem;
+}
+
+.navbar-toggler-icon {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+
+.navbar-toggler-check:checked ~ .navbar-collapse {
+  display: block;
+}
+
+/* Dropdown. */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  white-space: nowrap;
+}
+
+.dropdown-toggle::after {
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  content: "";
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+}
+
+.dropdown-menu {
+  position: absolute;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--moni-body-color);
+  text-align: left;
+  list-style: none;
+  background-color: var(--moni-body-bg);
+  background-clip: padding-box;
+  border: 1px solid var(--moni-border-translucent);
+  border-radius: var(--moni-radius);
+}
+
+.dropdown-item,
+.dropdown-menu > li > a {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1rem;
+  clear: both;
+  font-weight: 400;
+  color: var(--moni-body-color);
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+  color: var(--moni-body-color);
+  background-color: var(--moni-tertiary-bg);
+}
+
+.dropdown-item.active,
+.dropdown-item:active,
+.dropdown-menu > li > a.is-active,
+.dropdown-menu > li > a:active {
+  color: #fff;
+  text-decoration: none;
+  background-color: var(--moni-primary);
+}
+
+.navbar-nav .dropdown-menu {
+  position: static;
+}
+
+/* CSS-only dropdown: opens on hover / keyboard / tap focus. */
+.navbar-nav .dropdown:hover > .dropdown-menu,
+.navbar-nav .dropdown:focus-within > .dropdown-menu {
+  display: block;
+}
+
+.navbar-nav .dropdown-toggle {
+  cursor: pointer;
+}
+
+/* Bootstrap data-bs-popper="static" spacer. */
+.navbar-nav .dropdown-menu {
+  margin-top: 0.125rem;
+}
+
+/* Navbar expand lg. */
+@media (min-width: 992px) {
+  .navbar-expand-lg {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .navbar-expand-lg .navbar-nav {
+    flex-direction: row;
+  }
+
+  .navbar-expand-lg .navbar-nav .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+
+  /* Hover bridge over the 0.125rem spacer. */
+  .navbar-expand-lg .navbar-nav .dropdown-menu::before {
+    position: absolute;
+    top: calc(-0.125rem - 1px);
+    right: 0;
+    left: 0;
+    height: calc(0.125rem + 1px);
+    content: "";
+  }
+
+  .navbar-expand-lg .navbar-nav .nav-link {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .navbar-expand-lg .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto;
+  }
+
+  .navbar-expand-lg .navbar-toggler {
+    display: none;
+  }
+}
+
+/* Generic nav + tabs (local tasks). */
+.nav {
+  --moni-nav-link-color: var(--moni-link);
+  --moni-nav-link-hover-color: var(--moni-link-hover);
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+/*
+ * Must follow .nav (as in Bootstrap): outside .navbar the navbar colors are
+ * undefined, so .nav.navbar-nav links inherit the text color (footer menu).
+ */
+.navbar-nav {
+  --moni-nav-link-color: var(--moni-navbar-color);
+  --moni-nav-link-hover-color: var(--moni-navbar-hover-color);
+}
+
+.nav .nav-link {
+  padding: 0.5rem 1rem;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid var(--moni-border);
+}
+
+.nav-tabs .nav-link {
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-top-left-radius: var(--moni-radius);
+  border-top-right-radius: var(--moni-radius);
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+  isolation: isolate;
+  border-color: var(--moni-secondary-bg) var(--moni-secondary-bg) var(--moni-border);
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  color: var(--moni-emphasis);
+  background-color: var(--moni-body-bg);
+  border-color: var(--moni-border) var(--moni-border) var(--moni-body-bg);
+}
+
+/* Breadcrumb. */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0;
+  margin-bottom: 1rem;
+  list-style: none;
+}
+
+.breadcrumb-item + .breadcrumb-item {
+  padding-left: 0.5rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  float: left;
+  padding-right: 0.5rem;
+  color: var(--moni-secondary-color);
+  content: "/";
+}
+
+.breadcrumb-item.active {
+  color: var(--moni-secondary-color);
+}
+
+/* Pager. */
+.pagination {
+  display: flex;
+  padding-left: 0;
+  list-style: none;
+}
+
+.page-link {
+  position: relative;
+  display: block;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  color: var(--moni-link);
+  text-decoration: none;
+  background-color: var(--moni-body-bg);
+  border: 1px solid var(--moni-border);
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.page-link:hover {
+  z-index: 2;
+  color: var(--moni-link-hover);
+  background-color: var(--moni-tertiary-bg);
+  border-color: var(--moni-border);
+}
+
+.page-link:focus {
+  z-index: 3;
+  color: var(--moni-link-hover);
+  background-color: var(--moni-secondary-bg);
+  outline: 0;
+  box-shadow: var(--moni-focus-ring);
+}
+
+.page-item:not(:first-child) .page-link {
+  margin-left: -1px;
+}
+
+.page-item:first-child .page-link {
+  border-top-left-radius: var(--moni-radius);
+  border-bottom-left-radius: var(--moni-radius);
+}
+
+.page-item:last-child .page-link {
+  border-top-right-radius: var(--moni-radius);
+  border-bottom-right-radius: var(--moni-radius);
+}
+
+.page-link.active,
+.active > .page-link {
+  z-index: 3;
+  color: #fff;
+  background-color: var(--moni-primary);
+  border-color: var(--moni-primary);
+}
+
+.page-link.disabled,
+.disabled > .page-link {
+  color: var(--moni-secondary-color);
+  pointer-events: none;
+  background-color: var(--moni-secondary-bg);
+  border-color: var(--moni-border);
+}
+
+/* Alerts (status messages). */
+.alert {
+  position: relative;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--moni-radius);
+}
+
+.alert-dismissible {
+  padding-right: 3rem;
+}
+
+.alert-dismissible .btn-close {
+  display: none; /* No Bootstrap JS; messages stay visible. */
+}
+
+.alert-success { color: #0a3622; background-color: #d1e7dd; border-color: #a3cfbb; }
+.alert-info { color: #055160; background-color: #cff4fc; border-color: #9eeaf9; }
+.alert-warning { color: #664d03; background-color: #fff3cd; border-color: #ffe69c; }
+.alert-danger { color: #58151c; background-color: #f8d7da; border-color: #f1aeb5; }
+
+.alert-heading {
+  color: inherit;
+}
+
+/* Buttons. */
+.btn,
+.button,
+input[type="submit"].form-submit {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--moni-body-color);
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--moni-radius);
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.btn-primary,
+.button--primary,
+input[type="submit"].form-submit {
+  color: #fff;
+  background-color: var(--moni-primary);
+  border-color: var(--moni-primary);
+}
+
+.btn-primary:hover,
+.button--primary:hover,
+input[type="submit"].form-submit:hover {
+  color: #fff;
+  background-color: var(--moni-primary-hover);
+  border-color: #0a58ca;
+}
+
+.btn-secondary {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  color: #fff;
+  background-color: #5c636a;
+  border-color: #565e64;
+}
+
+.btn-danger {
+  color: #fff;
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-danger:hover {
+  color: #fff;
+  background-color: #bb2d3b;
+  border-color: #b02a37;
+}
+
+.btn-success {
+  color: #fff;
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.btn-success:hover {
+  color: #fff;
+  background-color: #157347;
+  border-color: #146c43;
+}
+
+.btn-warning {
+  color: #000;
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+
+.btn-warning:hover {
+  color: #000;
+  background-color: #ffca2c;
+  border-color: #ffc720;
+}
+
+.btn-light {
+  color: #000;
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+}
+
+.btn-light:hover {
+  color: #000;
+  background-color: #d3d4d5;
+  border-color: #c6c7c8;
+}
+
+.btn-dark {
+  color: #fff;
+  background-color: #212529;
+  border-color: #212529;
+}
+
+.btn-dark:hover {
+  color: #fff;
+  background-color: #424649;
+  border-color: #373b3e;
+}
+
+.btn-outline-primary {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: #0d6efd;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+}
+
+.btn-lg {
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem;
+  border-radius: 0.5rem;
+}
+
+.btn:focus-visible,
+.button:focus-visible,
+input[type="submit"].form-submit:focus-visible {
+  outline: 0;
+  box-shadow: var(--moni-focus-ring);
+}
+
+.btn:disabled,
+.btn.disabled {
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* Forms. */
+.form-label {
+  margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select,
+.form-text:not(small):not(.description),
+input.form-email,
+input.form-tel,
+input.form-number,
+input.form-url,
+input.form-date,
+textarea.form-textarea,
+select.form-select {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--moni-body-color);
+  appearance: none;
+  background-color: var(--moni-body-bg);
+  background-clip: padding-box;
+  border: 1px solid var(--moni-border);
+  border-radius: var(--moni-radius);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select,
+select.form-select {
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+.form-control:focus,
+.form-select:focus,
+input.form-email:focus,
+input.form-tel:focus,
+textarea.form-textarea:focus {
+  color: var(--moni-body-color);
+  background-color: var(--moni-body-bg);
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: var(--moni-focus-ring);
+}
+
+.form-control::placeholder {
+  color: var(--moni-secondary-color);
+  opacity: 1;
+}
+
+.form-control:disabled {
+  background-color: var(--moni-secondary-bg);
+  opacity: 1;
+}
+
+.form-check {
+  display: block;
+  min-height: 1.5rem;
+  padding-left: 1.5em;
+  margin-bottom: 0.125rem;
+}
+
+.form-check .form-check-input {
+  float: left;
+  margin-left: -1.5em;
+}
+
+.form-check-input {
+  width: 1em;
+  height: 1em;
+  margin-top: 0.25em;
+  vertical-align: top;
+  accent-color: var(--moni-primary);
+}
+
+small.form-text,
+div.form-text {
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: var(--moni-secondary-color);
+}
+
+.is-invalid,
+.error.form-control {
+  border-color: #dc3545;
+}
+
+.invalid-feedback {
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #dc3545;
+}
+
+/* Tables. */
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  vertical-align: top;
+  border-color: var(--moni-border);
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.5rem;
+  border-bottom-width: 1px;
+}
+
+.table > thead {
+  vertical-align: bottom;
+}
+
+/* Lists rendered with inline links (node links). */
+.list-inline,
+ul.inline {
+  padding-left: 0;
+  list-style: none;
+}
+
+.list-inline-item,
+ul.inline > li {
+  display: inline-block;
+}
+
+.list-inline-item:not(:last-child),
+ul.inline > li:not(:last-child) {
+  margin-right: 0.5rem;
+}
+
+/* Testimonials slider (scroll-snap, vezérlés: js/testimonials.js). */
+.testimonials {
+  position: relative;
+}
+
+.testimonials__track {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.testimonials__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* flex stretch: minden slide a legmagasabbal egyforma magas. */
+.testimonials__slide {
+  flex: 0 0 100%;
+  padding: 2rem 2.75rem;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .testimonials__slide {
+    padding: 1rem 3rem;
+  }
+}
+
+.testimonials__prev,
+.testimonials__next {
+  position: absolute;
+  top: 50%;
+  padding: 1rem;
+  color: #fff;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.5));
+  transform: translateY(-50%);
+}
+
+/* Vékony vonalas chevron, mint a Back to top gombon. */
+.testimonials__prev::before,
+.testimonials__next::before {
+  display: block;
+  width: 14px;
+  height: 14px;
+  content: "";
+  border: solid currentColor;
+  border-width: 2px 2px 0 0;
+}
+
+.testimonials__prev {
+  left: 0;
+}
+
+.testimonials__prev::before {
+  transform: translateX(25%) rotate(-135deg);
+}
+
+.testimonials__next {
+  right: 0;
+}
+
+.testimonials__next::before {
+  transform: translateX(-25%) rotate(45deg);
+}
+
+.testimonials__dots {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 1rem;
+}
+
+.testimonials__dots button {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  cursor: pointer;
+  background: #000;
+  border: 0;
+  border-radius: 50%;
+}
+
+.testimonials__dots button[aria-current="true"] {
+  width: 12px;
+  height: 12px;
+}

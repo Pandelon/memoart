@@ -1,0 +1,28 @@
+name: moni2026
+type: theme
+description: 'Me.Mo Foto 2026 – pure CSS téma (Bootstrap CSS/JS nélkül), a memo téma szerkezetével.'
+core_version_requirement: ^10.3 || ^11
+# A bootstrap5 base theme csak a markup (template-ek, osztálynevek) miatt
+# marad; a CSS-ét és JS-ét a moni2026_css_alter() / moni2026_js_alter() kiveszi.
+base theme: bootstrap5
+screenshot: screenshot.png
+
+libraries:
+  - moni2026/global
+
+ckeditor5-stylesheets:
+  - css/ck5style.css
+
+regions:
+  header: Header
+  nav_branding: 'Navigation branding region'
+  nav_main: 'Main navigation region'
+  nav_additional: 'Additional navigation region (eg search form, social icons, etc)'
+  breadcrumb: Breadcrumbs
+  front_first: 'Front first'
+  front_second: 'Front second'
+  front_third: 'Front third'
+  content: 'Main content'
+  sidebar_first: 'Sidebar first'
+  sidebar_second: 'Sidebar second'
+  footer: Footer

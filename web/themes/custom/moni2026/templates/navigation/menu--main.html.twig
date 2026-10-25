@@ -1,0 +1,62 @@
+{#
+/**
+ * @file
+ * Theme override to display the main menu (moni2026).
+ *
+ * Same markup as bootstrap5's menu--main.html.twig, except that a <nolink> /
+ * <button> parent item is rendered as a focusable span: without Bootstrap JS
+ * an empty href would reload the page, and the CSS-only dropdown opens on
+ * :hover / :focus-within.
+ */
+#}
+{% import _self as menus %}
+
+{{ menus.build_menu(items, attributes, 0) }}
+
+{% macro build_menu(items, attributes, menu_level) %}
+  {% import _self as menus %}
+  {% if items %}
+    {%
+      set ul_classes = [
+        menu_level == 0 ? 'navbar-nav justify-content-end flex-wrap',
+        menu_level > 0 ? 'dropdown-menu',
+        'nav-level-' ~ menu_level,
+      ]
+    %}
+    <ul{{ attributes.addClass(ul_classes) }}>
+    {% for item in items %}
+      {{ menus.add_link(item, attributes.removeClass(ul_classes), menu_level) }}
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}
+
+{% macro add_link(item, attributes, menu_level) %}
+  {% import _self as menus %}
+  {%
+    set list_item_classes = [
+      'nav-item',
+      item.is_expanded ? 'dropdown',
+    ]
+  %}
+  {%
+    set link_class = [
+      menu_level == 0 ? 'nav-link',
+      item.in_active_trail ? 'active',
+      menu_level == 0 and (item.is_expanded or item.is_collapsed) ? 'dropdown-toggle',
+      menu_level > 0 ? 'dropdown-item',
+    ]
+  %}
+  <li{{ item.attributes.addClass(list_item_classes) }}>
+    {% if menu_level == 0 and item.below %}
+      {% if item.url.isRouted and item.url.routeName in ['<nolink>', '<button>'] %}
+        <span class="{{ link_class|join(' ')|trim }}" tabindex="0" role="button" aria-haspopup="true">{{ item.title }}</span>
+      {% else %}
+        {{ link(item.title, item.url, { 'class': link_class, 'aria-haspopup': 'true' }) }}
+      {% endif %}
+      {{ menus.build_menu(item.below, attributes, menu_level + 1) }}
+    {% else %}
+      {{ link(item.title, item.url, { 'class': link_class }) }}
+    {% endif %}
+  </li>
+{% endmacro %}

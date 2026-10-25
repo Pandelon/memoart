@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Testimonials slider (moni2026).
+ *
+ * Scroll-snap alapú slider, a nyilakat, pöttyöket és az autoplay-t a
+ * js/testimonials.js kezeli. data-autoplay: lapozási idő ms-ban.
+ *
+ * @see template_preprocess_views_view_unformatted()
+ */
+#}
+{% if title %}
+  <h3>{{ title }}</h3>
+{% endif %}
+<div class="testimonials" data-autoplay="4000">
+  <div class="testimonials__track">
+    {% for row in rows %}
+      <div{{ row.attributes.addClass('testimonials__slide') }}>
+        {{- row.content -}}
+      </div>
+    {% endfor %}
+  </div>
+  {% if rows|length > 1 %}
+    <button type="button" class="testimonials__prev" aria-label="{{ 'Previous'|t }}"></button>
+    <button type="button" class="testimonials__next" aria-label="{{ 'Next'|t }}"></button>
+    <div class="testimonials__dots">
+      {% for row in rows %}
+        <button type="button" aria-label="{{ loop.index }} / {{ rows|length }}"></button>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,353 @@
+/**
+ * @file
+ * moni2026 – Me.Mo Foto look (port of memo/scss/*.scss).
+ *
+ * Block ID selectors are prefix-agnostic ([id*="…"]): when the theme gets
+ * installed, Drupal copies the default theme's blocks with a moni2026_ prefix.
+ */
+
+/* _structure.scss */
+main {
+  background-color: var(--moni-main-bg);
+}
+
+/*
+ * Masonry-szerű galéria CSS oszlopokkal: a képek oszloponként egymás alá
+ * kerülnek, nincs sor szerinti üres hely. Legfeljebb 4 oszlop, min. 220px.
+ */
+.field--name-field-galeria-kepek {
+  columns: 4 220px;
+  column-gap: 1em;
+}
+
+.field--name-field-galeria-kepek > .field__item {
+  margin-bottom: 1em;
+  break-inside: avoid;
+}
+
+.field--name-field-galeria-kepek img {
+  display: block;
+}
+
+.field__item {
+  display: block;
+  overflow: hidden;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,102,203, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+}
+
+footer .region-footer {
+  display: flex;
+  flex-direction: row;
+  color: #fff;
+}
+
+footer .region-footer > div {
+  width: 33%;
+}
+
+footer .region-footer > div a {
+  color: var(--moni-footer-link);
+}
+
+footer {
+  background-color: var(--moni-footer-bg);
+}
+
+footer h2,
+footer h3 {
+  color: #fff;
+}
+
+.node--type-article .node__links {
+  clear: both;
+}
+
+.front1 .container {
+  position: relative;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.front1 [id^="block-"][id*="megrendelestelefon"] .field--name-body {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+  background-color: var(--moni-main-bg);
+}
+
+.front2 {
+  padding: 30px 0;
+}
+
+.front2 .container {
+  background: #fff;
+}
+
+.front3 {
+  background-color: color-mix(in srgb, var(--moni-accent-light) 80%, transparent);
+}
+
+.front3 .container {
+  padding: 0 3rem;
+}
+
+@keyframes bg-animation {
+  0% { background-position: left; }
+  50% { background-position: right; }
+  100% { background-position: left; }
+}
+
+/* _navigation.scss */
+.region-nav-main .navbar-nav .nav-link {
+  position: relative;
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.region-nav-main .navbar-nav .nav-link::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: block;
+  height: 5px;
+  content: "";
+  background: var(--moni-orange);
+  transform: scale(0, 1);
+  transition: transform ease-in-out 250ms;
+}
+
+.region-nav-main .navbar-nav .nav-link:hover::before,
+.region-nav-main .navbar-nav .nav-link:focus-visible::before {
+  transform: scale(1, 1);
+}
+
+/* _elements.scss */
+h2 a {
+  color: var(--moni-accent);
+  text-decoration: none;
+}
+
+h2 a:hover {
+  color: var(--moni-accent-dark);
+  text-decoration: none;
+}
+
+.flex-control-nav {
+  display: none;
+}
+
+.flex-direction-nav a::before {
+  font-size: 35px;
+  color: var(--moni-accent);
+}
+
+div#cconsent-bar {
+  color: #000;
+  background-color: var(--moni-accent);
+}
+
+.region-nav-additional .field--name-body img {
+  margin: 0 0.5rem;
+}
+
+/* _views.scss */
+.view-testimonials h3 {
+  margin-bottom: 0;
+  font-family: var(--moni-font-script);
+  color: darkblue;
+  text-align: right;
+}
+
+.view-testimonials .views-field-title a {
+  text-decoration: none;
+}
+
+.view-testimonials .views-field-field-titulus {
+  float: right;
+  font-style: italic;
+  color: #373737;
+}
+
+.view-testimonials .slides li {
+  position: relative;
+  padding: 2rem;
+}
+
+.view-testimonials .slides li::before {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  font-family: Georgia, serif;
+  font-size: 5em;
+  font-weight: normal;
+  color: #d6d6d6;
+  content: "\201C";
+}
+
+.view-testimonials .slides li::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  font-family: Georgia, serif;
+  font-size: 25em;
+  font-weight: normal;
+  line-height: 100px;
+  color: #d6d6d6;
+  content: "\201D";
+}
+
+.view-ajanlat-ok- .views-field-field-media .field-content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.view-ajanlat-ok- .field--name-field-media-image img {
+  transition: transform 0.4s ease-in-out;
+}
+
+.view-ajanlat-ok- .field--name-field-media-image img:hover {
+  transform: scale(1.2);
+}
+
+.views-field-field-media li {
+  margin-left: 0;
+  list-style: none;
+}
+
+.field--name-field-media .field__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1%;
+}
+
+[id^="block-views-block-ajanlat-ok-block-1"] article {
+  float: left;
+  width: 350px;
+  margin-right: 1em;
+}
+
+/* Masonry. */
+.masonry {
+  display: grid;
+  grid-auto-rows: 0;
+  grid-gap: 1em;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  margin-top: 2rem;
+}
+
+.masonry-brick {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  background-color: var(--moni-brick-bg);
+}
+
+.masonry-brick .field--name-field-media-image {
+  margin-right: -1rem;
+  margin-left: -1rem;
+  overflow: hidden;
+}
+
+.masonry-brick .field--name-field-media-image img {
+  width: 100%;
+  overflow: hidden;
+  transition: all 0.5s ease;
+}
+
+.masonry-brick .field--name-field-media-image img:hover {
+  transform: translateZ(0) scale(1.2);
+}
+
+/* _media-queries.scss */
+@media only screen and (max-width: 480px) {
+  .navbar-default .navbar-brand {
+    height: inherit;
+    margin-top: 0;
+  }
+
+  header {
+    position: relative;
+  }
+
+  .navbar-toggler {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .navbar-brand {
+    margin: 0;
+  }
+
+  .navbar-brand img {
+    width: auto;
+    height: 180px;
+    margin: 0;
+  }
+
+  #navbar-collapse {
+    position: relative;
+    width: inherit;
+  }
+
+  #navbar-collapse .menu.nav li {
+    display: block;
+  }
+
+  .dropdown-menu > li > a {
+    white-space: normal;
+  }
+
+  .field--name-field-galeria-kepek {
+    display: block;
+  }
+
+  .field--name-field-galeria-kepek .field__item img {
+    width: 100%;
+  }
+
+  .field--name-field-media-image {
+    width: 100%;
+  }
+
+  .view-frontpage .view-content {
+    display: block;
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar-brand img {
+    height: 100px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Címlapi lapozó narancssárgában. */
+.path-frontpage .page-link {
+  color: var(--moni-accent-dark);
+}
+
+.path-frontpage .page-link:hover,
+.path-frontpage .page-link:focus {
+  color: var(--moni-accent-dark);
+  background-color: color-mix(in srgb, var(--moni-accent) 15%, #fff);
+}
+
+.path-frontpage .page-link.active,
+.path-frontpage .active > .page-link {
+  color: #000;
+  background-color: var(--moni-accent);
+  border-color: var(--moni-accent);
+}

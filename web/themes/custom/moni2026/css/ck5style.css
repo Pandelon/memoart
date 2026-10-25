@@ -1,0 +1,62 @@
+/**
+ * @file
+ * moni2026 – CKEditor 5 content styles (front-end typography, no Bootstrap).
+ */
+
+.ck-content {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #212529;
+}
+
+.ck-content h1,
+.ck-content h2,
+.ck-content h3,
+.ck-content h4,
+.ck-content h5,
+.ck-content h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.ck-content h1 { font-size: 2.5rem; }
+.ck-content h2 { font-size: 2rem; }
+.ck-content h3 { font-size: 1.75rem; }
+.ck-content h4 { font-size: 1.5rem; }
+.ck-content h5 { font-size: 1.25rem; }
+.ck-content h6 { font-size: 1rem; }
+
+.ck-content p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.ck-content a {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.ck-content h2 a {
+  color: hsl(39, 100%, 50%);
+  text-decoration: none;
+}
+
+.ck-content ul,
+.ck-content ol {
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.ck-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ck-content blockquote {
+  margin: 0 0 1rem;
+  padding-left: 1rem;
+  border-left: 0.25rem solid #dee2e6;
+}

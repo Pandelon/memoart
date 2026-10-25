@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Me.Mo Foto 2026 theme functions.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Language\LanguageInterface;
+
+/**
+ * Implements hook_css_alter().
+ *
+ * Removes the compiled Bootstrap framework (css/style.css) and the vendored
+ * dist/ assets (Bootstrap Icons) of the bootstrap5 base theme. The plain
+ * Drupal component styles in css/components/ are kept.
+ */
+function moni2026_css_alter(array &$css, AttachedAssetsInterface $assets, LanguageInterface $language): void {
+  $base_path = _moni2026_bootstrap5_path();
+  foreach (array_keys($css) as $key) {
+    if (!is_string($key) || !str_starts_with($key, $base_path)) {
+      continue;
+    }
+    if (!str_starts_with($key, $base_path . 'css/components/')) {
+      unset($css[$key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_js_alter().
+ *
+ * Removes the vendored Bootstrap JS bundle (dist/). Drupal-only scripts of the
+ * base theme (e.g. js/nav-tabs.js) are kept.
+ */
+function moni2026_js_alter(array &$javascript, AttachedAssetsInterface $assets, LanguageInterface $language): void {
+  $dist_path = _moni2026_bootstrap5_path() . 'dist/';
+  foreach (array_keys($javascript) as $key) {
+    if (is_string($key) && str_starts_with($key, $dist_path)) {
+      unset($javascript[$key]);
+    }
+  }
+}
+
+/**
+ * Returns the bootstrap5 theme path with a trailing slash.
+ */
+function _moni2026_bootstrap5_path(): string {
+  $path = &drupal_static(__FUNCTION__);
+  if ($path === NULL) {
+    $path = \Drupal::service('extension.list.theme')->getPath('bootstrap5') . '/';
+  }
+  return $path;
+}
+
+/**
+ * Provides a list of masonry views.
+ *
+ * @return string[]
+ *   The view IDs.
+ */
+function _moni2026_masonry_view_ids(): array {
+  return ['frontpage'];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for views_view.
+ */
+function moni2026_theme_suggestions_views_view_alter(array &$suggestions, array $variables): void {
+  if (in_array($variables['view']->id(), _moni2026_masonry_view_ids(), TRUE)) {
+    $suggestions[] = 'views_view__masonry';
+  }
+  $suggestions[] = 'views_view__' . $variables['view']->id();
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for views_view_unformatted.
+ */
+function moni2026_theme_suggestions_views_view_unformatted_alter(array &$suggestions, array $variables): void {
+  if (in_array($variables['view']->id(), _moni2026_masonry_view_ids(), TRUE)) {
+    $suggestions[] = 'views_view_unformatted__masonry';
+  }
+  $suggestions[] = 'views_view_unformatted__' . $variables['view']->id();
+}

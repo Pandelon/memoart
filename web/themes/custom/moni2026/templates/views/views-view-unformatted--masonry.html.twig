@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Theme override for masonry rows (moni2026).
+ *
+ * @see template_preprocess_views_view_unformatted()
+ */
+#}
+{% if title %}
+  <h3>{{ title }}</h3>
+{% endif %}
+{% for row in rows %}
+  {%
+    set row_classes = [
+      default_row_class ? 'views-row',
+      'masonry-brick',
+    ]
+  %}
+  <div{{ row.attributes.addClass(row_classes) }}>
+    <div class="masonry-content">
+      {{- row.content -}}
+    </div>
+  </div>
+{% endfor %}
