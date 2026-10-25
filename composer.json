@@ -41,7 +41,6 @@
         "drupal/token": "^1.13",
         "drupal/upgrade_status": "^4.3",
         "drupal/views_slideshow": "^5.0",
-        "drupal/vvjs": "^1.0",
         "drupal/webform": "^6.3@beta",
         "drupal/xmlsitemap": "^2.0",
         "drush/drush": "^13",
