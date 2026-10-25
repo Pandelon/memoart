@@ -59,7 +59,8 @@
             "drupal/core-composer-scaffold": true,
             "drupal/core-project-message": true,
             "symfony/runtime": true
-        }
+        },
+        "preferred-install": "dist"
     },
     "extra": {
         "drupal-scaffold": {
