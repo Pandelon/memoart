@@ -1,8 +1,16 @@
 # moni2026 – Me.Mo Foto 2026 theme
 
-Pure CSS téma: a `bootstrap5` base theme csak a markup miatt marad, a Bootstrap
-CSS-t és JS-t a `moni2026_css_alter()` / `moni2026_js_alter()` kiszedi.
-Nincs SCSS és nincs build lépés.
+Önálló pure CSS téma, `base theme: false`. Nincs SCSS és nincs build lépés.
+A stable9-ből a használt template-ek (`block--system-menu-block`,
+`block--system-messages-block`, `select`, `feed-icon`, `views-view-field(s)`)
+és a három preprocess hookja (block, views_view, item_list__search_results)
+át lett véve; a CSS a core modulok saját fájljaiból jön.
+A `bootstrap5` témától független: a frontend template-jei (`admin/`,
+`media-library/`, `content-edit/` nélkül, azokat a Claro rendereli), a
+preprocess hookjai (`moni2026.theme`), a `css/components/*`, a
+`js/nav-tabs.js` és a hozzájuk tartozó `images/icons/*` át lettek véve.
+A `b5_*` theme settingek maradtak, de beállító űrlap nincs hozzájuk:
+`drush cset moni2026.settings b5_top_container …`.
 
 - `css/base.css`: tokenek (`--moni-*`), reset, tipográfia
 - `css/layout.css`: container, grid, a template-ekben használt utility osztályok
@@ -13,8 +21,7 @@ Nincs SCSS és nincs build lépés.
   `:hover` / `:focus-within` alapon nyílik: a `<nolink>` szülő menüpont
   (Galériák) a `menu--main.html.twig`-ben fókuszálható `<span>`, így
   JS nélkül sem tölti újra az oldalt, és mobilon tapintásra nyílik.
-- A bootstrap5 `css/components/*` (Drupal-komponens CSS) megmarad, csak a
-  Bootstrap framework (`css/style.css`, `dist/`) kerül ki.
+- `css/components/*`: a bootstrap5 Drupal-komponens CSS-e változatlanul.
 
 ## Ellenőrzés
 

@@ -17,3 +17,72 @@ global:
   dependencies:
     - core/drupal
     - core/once
+
+# Drupal-komponens stílusok a bootstrap5 base theme-ből (css/components).
+base:
+  css:
+    component:
+      css/components/action-links.css: { weight: -10 }
+      css/components/breadcrumb.css: { weight: -10 }
+      css/components/container-inline.css: { weight: -10 }
+      css/components/details.css: { weight: -10 }
+      css/components/exposed-filters.css: { weight: -10 }
+      css/components/field.css: { weight: -10 }
+      css/components/form.css: { weight: -10 }
+      css/components/icons.css: { weight: -10 }
+      css/components/inline-form.css: { weight: -10 }
+      css/components/item-list.css: { weight: -10 }
+      css/components/links.css: { weight: -10 }
+      css/components/menu.css: { weight: -10 }
+      css/components/more-link.css: { weight: -10 }
+      css/components/pager.css: { weight: -10 }
+      css/components/tabledrag.css: { weight: -10 }
+      css/components/tableselect.css: { weight: -10 }
+      css/components/tablesort.css: { weight: -10 }
+      css/components/textarea.css: { weight: -10 }
+      css/components/ui-dialog.css: { weight: -10 }
+dialog:
+  css:
+    component:
+      css/components/dialog.css: { weight: -10 }
+dropbutton:
+  css:
+    component:
+      css/components/dropbutton.css: { weight: -10 }
+file:
+  css:
+    component:
+      css/components/file.css: { weight: -10 }
+indented:
+  css:
+    component:
+      css/components/indented.css: {}
+messages:
+  css:
+    component:
+      css/components/messages.css: { weight: -10 }
+node:
+  css:
+    component:
+      css/components/node.css: { weight: -10 }
+progress:
+  css:
+    component:
+      css/components/progress.css: { weight: -10 }
+search-results:
+  css:
+    component:
+      css/components/search-results.css: {}
+user:
+  css:
+    component:
+      css/components/user.css: { weight: -10 }
+drupal.nav-tabs:
+  js:
+    js/nav-tabs.js: {}
+  dependencies:
+    - core/matchmedia
+    - core/drupal
+    - core/once
+    - core/drupal.debounce
+    - core/collapse
