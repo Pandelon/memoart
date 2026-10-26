@@ -1,0 +1,27 @@
+uuid: 9a0078fa-fc20-488a-ada4-cf78f70fe3c1
+langcode: hu
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: NUwdELeUCS-8D_AtVNIVLi4nUACKSuO9pxPWWJm-4Ks
+id: moni2026_main_navigation
+theme: moni2026
+region: nav_main
+weight: 0
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'Main navigation'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: true
+visibility: {  }

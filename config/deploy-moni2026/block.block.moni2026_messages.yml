@@ -1,0 +1,22 @@
+uuid: 83c1d72b-cedd-4b29-9bed-06b754f478b7
+langcode: hu
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: BEZlZdbCU54FQ9Sh2KlXdg5p8FOAUNB6AKndBtmwTTE
+id: moni2026_messages
+theme: moni2026
+region: content
+weight: -7
+provider: null
+plugin: system_messages_block
+settings:
+  id: system_messages_block
+  label: Messages
+  label_display: '0'
+  provider: system
+visibility: {  }

@@ -1,0 +1,22 @@
+uuid: 2d8e89ff-34a0-4c04-86ed-0aea1648af3d
+langcode: hu
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: ovPkDxA0sfkG83VBBHuAOvwt7RcYG8lHQZHn1npJIHE
+id: moni2026_powered_by_drupal
+theme: moni2026
+region: footer
+weight: -8
+provider: null
+plugin: system_powered_by_block
+settings:
+  id: system_powered_by_block
+  label: 'Powered by Drupal'
+  label_display: '0'
+  provider: system
+visibility: {  }

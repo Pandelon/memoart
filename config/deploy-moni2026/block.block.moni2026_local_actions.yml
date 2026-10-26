@@ -1,0 +1,20 @@
+uuid: 6049643f-ccae-43dc-9171-55d980acb9fb
+langcode: hu
+status: true
+dependencies:
+  theme:
+    - moni2026
+_core:
+  default_config_hash: bcVbXS6ZlraGaiWL_znmOaZReWhM1Ndizve4XKzxDOI
+id: moni2026_local_actions
+theme: moni2026
+region: content
+weight: -2
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }

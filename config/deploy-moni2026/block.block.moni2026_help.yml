@@ -1,0 +1,22 @@
+uuid: 139bd8cf-ae5b-4561-baf4-694558fec271
+langcode: hu
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - moni2026
+_core:
+  default_config_hash: Ig4imIcKtCji4aopkWJWVRrZigjNV-GQ4nOjvecv-xo
+id: moni2026_help
+theme: moni2026
+region: content
+weight: -3
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  label_display: '0'
+  provider: help
+visibility: {  }

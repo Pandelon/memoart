@@ -1,0 +1,23 @@
+uuid: 23436d9d-d527-4dbe-a525-d0b1c8f35bdd
+langcode: hu
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:bf8a0f97-84ac-4a89-b24e-b947937023b2'
+  module:
+    - block_content
+  theme:
+    - moni2026
+id: moni2026_footerinfo
+theme: moni2026
+region: footer
+weight: -7
+provider: null
+plugin: 'block_content:bf8a0f97-84ac-4a89-b24e-b947937023b2'
+settings:
+  id: 'block_content:bf8a0f97-84ac-4a89-b24e-b947937023b2'
+  label: 'Footer info'
+  label_display: '0'
+  provider: block_content
+  view_mode: full
+visibility: {  }

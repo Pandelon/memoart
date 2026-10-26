@@ -1,0 +1,22 @@
+uuid: 830d29b3-c8d8-45d6-b938-76ca08058403
+langcode: hu
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: suwCsqPoFPjsmUy9i8V2pj-Fd7mZyvqCQioDpkyCKgs
+id: moni2026_content
+theme: moni2026
+region: content
+weight: -1
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility: {  }

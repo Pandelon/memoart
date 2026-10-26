@@ -1,0 +1,22 @@
+uuid: a667dde6-fe2c-4f9c-a672-d3c922dcb8b9
+langcode: hu
+status: false
+dependencies:
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: uWJcSQ-xog8GD7597plZ7hxqSibzp1FwrkXl2yuGDFo
+id: moni2026_breadcrumbs
+theme: moni2026
+region: breadcrumb
+weight: 0
+provider: null
+plugin: system_breadcrumb_block
+settings:
+  id: system_breadcrumb_block
+  label: Breadcrumbs
+  label_display: '0'
+  provider: system
+visibility: {  }
