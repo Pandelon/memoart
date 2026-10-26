@@ -2,13 +2,29 @@ name: moni2026
 type: theme
 description: 'Me.Mo Foto 2026 – pure CSS téma (Bootstrap CSS/JS nélkül), a memo téma szerkezetével.'
 core_version_requirement: ^10.3 || ^11
-# A bootstrap5 base theme csak a markup (template-ek, osztálynevek) miatt
-# marad; a CSS-ét és JS-ét a moni2026_css_alter() / moni2026_js_alter() kiveszi.
-base theme: bootstrap5
+# Önálló téma: a bootstrap5 frontend template-jei, preprocess hookjai és
+# Drupal-komponens CSS-e, valamint a használt stable9 template-ek át lettek
+# véve, a Bootstrap framework nélkül.
+base theme: false
 screenshot: screenshot.png
 
 libraries:
+  - moni2026/base
+  - moni2026/messages
+  - core/normalize
   - moni2026/global
+
+libraries-extend:
+  user/drupal.user:
+    - moni2026/user
+  core/drupal.dropbutton:
+    - moni2026/dropbutton
+  core/drupal.dialog:
+    - moni2026/dialog
+  file/drupal.file:
+    - moni2026/file
+  core/drupal.progress:
+    - moni2026/progress
 
 ckeditor5-stylesheets:
   - css/ck5style.css

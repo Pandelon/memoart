@@ -7,52 +7,202 @@
 
 declare(strict_types=1);
 
-use Drupal\Core\Asset\AttachedAssetsInterface;
-use Drupal\Core\Language\LanguageInterface;
+use Drupal\block\Entity\Block;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Render\Element;
+
+// A bootstrap5 és a stable9 base theme frontend preprocess hookjai,
+// változatlan működéssel. Az admin (views UI, media library, modules) hookok
+// kimaradtak, azokat a Claro rendereli.
 
 /**
- * Implements hook_css_alter().
- *
- * Removes the compiled Bootstrap framework (css/style.css) and the vendored
- * dist/ assets (Bootstrap Icons) of the bootstrap5 base theme. The plain
- * Drupal component styles in css/components/ are kept.
+ * Implements hook_preprocess_HOOK() for html.
  */
-function moni2026_css_alter(array &$css, AttachedAssetsInterface $assets, LanguageInterface $language): void {
-  $base_path = _moni2026_bootstrap5_path();
-  foreach (array_keys($css) as $key) {
-    if (!is_string($key) || !str_starts_with($key, $base_path)) {
-      continue;
-    }
-    if (!str_starts_with($key, $base_path . 'css/components/')) {
-      unset($css[$key]);
+function moni2026_preprocess_html(array &$variables): void {
+  $variables['b5_body_schema'] = theme_get_setting('b5_body_schema');
+  $variables['b5_body_bg_schema'] = theme_get_setting('b5_body_bg_schema');
+  $variables['b5_theme_mode'] = theme_get_setting('b5_theme_mode');
+
+  $route_name = (string) \Drupal::routeMatch()->getRouteName();
+  $variables['attributes']['class'][] = 'page-route-' . Html::cleanCssIdentifier(str_replace('.', '-', $route_name));
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for page.
+ */
+function moni2026_preprocess_page(array &$variables): void {
+  foreach (['b5_top_container', 'b5_navbar_schema', 'b5_navbar_bg_schema', 'b5_footer_schema', 'b5_footer_bg_schema'] as $setting) {
+    $variables[$setting] = theme_get_setting($setting);
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for menu_local_tasks.
+ */
+function moni2026_preprocess_menu_local_tasks(array &$variables): void {
+  if (!empty($variables['primary'])) {
+    $variables['primary']['#attached']['library'][] = 'moni2026/drupal.nav-tabs';
+  }
+  elseif (!empty($variables['secondary'])) {
+    $variables['secondary']['#attached']['library'][] = 'moni2026/drupal.nav-tabs';
+  }
+  foreach (['primary', 'secondary'] as $level) {
+    foreach (Element::children($variables[$level]) as $key) {
+      $variables[$level][$key]['#level'] = $level;
     }
   }
 }
 
 /**
- * Implements hook_js_alter().
- *
- * Removes the vendored Bootstrap JS bundle (dist/). Drupal-only scripts of the
- * base theme (e.g. js/nav-tabs.js) are kept.
+ * Implements hook_preprocess_HOOK() for menu_local_task.
  */
-function moni2026_js_alter(array &$javascript, AttachedAssetsInterface $assets, LanguageInterface $language): void {
-  $dist_path = _moni2026_bootstrap5_path() . 'dist/';
-  foreach (array_keys($javascript) as $key) {
-    if (is_string($key) && str_starts_with($key, $dist_path)) {
-      unset($javascript[$key]);
+function moni2026_preprocess_menu_local_task(array &$variables): void {
+  // A generic active link handler szigorúbb, mint ami a tabokhoz kell.
+  $variables['link']['#options']['attributes']['class'][] = ($variables['is_active'] ?? FALSE) === TRUE ? 'nav-link active is-active' : 'nav-link';
+  if (isset($variables['element']['#level'])) {
+    $variables['level'] = $variables['element']['#level'];
+  }
+}
+
+/**
+ * Converts a string class attribute to an array.
+ */
+function _moni2026_class_to_array(array &$variables): void {
+  if (isset($variables['attributes']['class']) && !is_array($variables['attributes']['class'])) {
+    $variables['attributes']['class'] = [$variables['attributes']['class']];
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for form_element.
+ */
+function moni2026_preprocess_form_element(array &$variables): void {
+  if (!isset($variables['type'])) {
+    return;
+  }
+  if (in_array($variables['type'], ['checkbox', 'radio'], TRUE)) {
+    if (isset($variables['label'])) {
+      $variables['label']['#attributes']['class'][] = 'form-check-label';
+    }
+    $variables['attributes']['class'][] = 'form-check';
+  }
+  elseif (in_array($variables['type'], ['file', 'managed_file'], TRUE)) {
+    $variables['label']['#attributes']['class'][] = 'form-label';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for textarea.
+ */
+function moni2026_preprocess_textarea(array &$variables): void {
+  _moni2026_class_to_array($variables);
+  $variables['attributes']['class'][] = 'form-control';
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for input.
+ */
+function moni2026_preprocess_input(array &$variables): void {
+  _moni2026_class_to_array($variables);
+  $type = $variables['attributes']['type'];
+  if (in_array($type, ['text', 'email', 'tel', 'number', 'search', 'password', 'url', 'month', 'week', 'date', 'time'], TRUE)) {
+    $variables['attributes']['class'][] = 'form-control';
+  }
+  if (in_array($type, ['checkbox', 'radio'], TRUE)) {
+    $variables['attributes']['class'][] = 'form-check-input';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for input__file.
+ */
+function moni2026_preprocess_input__file(array &$variables): void {
+  $variables['attributes']['class'][] = 'form-control';
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for datetime_form.
+ */
+function moni2026_preprocess_datetime_form(array &$variables): void {
+  _moni2026_class_to_array($variables);
+  $variables['attributes']['class'][] = 'form-inline';
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for image.
+ */
+function moni2026_preprocess_image(array &$variables): void {
+  _moni2026_class_to_array($variables);
+  $variables['attributes']['class'][] = 'img-fluid';
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for table.
+ */
+function moni2026_preprocess_table(array &$variables): void {
+  _moni2026_class_to_array($variables);
+  $variables['attributes']['class'][] = 'table';
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for item_list__search_results.
+ *
+ * A stable9-ből: az üres keresési találat h3-ként jelenik meg.
+ */
+function moni2026_preprocess_item_list__search_results(array &$variables): void {
+  if (isset($variables['empty']['#tag'])) {
+    $variables['empty']['#tag'] = 'h3';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views_view.
+ *
+ * A stable9-ből: a Views által korábban adott BC osztályok (pl. page_1 ->
+ * page-1), a CSS és a JS is ezekre hivatkozhat.
+ */
+function moni2026_preprocess_views_view(array &$variables): void {
+  if (!empty($variables['attributes']['class'])) {
+    $bc_classes = preg_replace('/[^a-zA-Z0-9- ]/', '-', $variables['attributes']['class']);
+    $variables['attributes']['class'] = array_merge($variables['attributes']['class'], $bc_classes);
+  }
+  if (!empty($variables['css_class'])) {
+    $existing_classes = explode(' ', $variables['css_class']);
+    $bc_classes = preg_replace('/[^a-zA-Z0-9- ]/', '-', $existing_classes);
+    $variables['css_class'] = implode(' ', array_merge($existing_classes, $bc_classes));
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for block.
+ *
+ * A stable9-ből: a content attribútumai a blokk wrapperre kerülnek. Utána
+ * (a bootstrap5-ből) a blokk régiója a content-re kerül a lenti menu
+ * suggestionökhöz.
+ */
+function moni2026_preprocess_block(array &$variables): void {
+  if (isset($variables['content']['#attributes'])) {
+    $variables['attributes'] = NestedArray::mergeDeep($variables['attributes'] ?? [], $variables['content']['#attributes']);
+    unset($variables['content']['#attributes']);
+  }
+  if (isset($variables['elements']['#id']) && !isset($variables['content']['#lazy_builder'])) {
+    $region = Block::load($variables['elements']['#id'])?->getRegion();
+    if (!empty($region)) {
+      $variables['content']['#attributes']['data-block']['region'] = $region;
     }
   }
 }
 
 /**
- * Returns the bootstrap5 theme path with a trailing slash.
+ * Implements hook_theme_suggestions_HOOK_alter() for menu.
  */
-function _moni2026_bootstrap5_path(): string {
-  $path = &drupal_static(__FUNCTION__);
-  if ($path === NULL) {
-    $path = \Drupal::service('extension.list.theme')->getPath('bootstrap5') . '/';
+function moni2026_theme_suggestions_menu_alter(array &$suggestions, array $variables): void {
+  if (isset($variables['attributes']['data-block']['region'])) {
+    $region = $variables['attributes']['data-block']['region'];
+    $suggestions[] = $variables['theme_hook_original'] . '__' . $region;
+    $suggestions[] = 'menu__' . $region;
   }
-  return $path;
 }
 
 /**

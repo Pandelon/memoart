@@ -1,0 +1,23 @@
+uuid: 515bd585-40e8-4fae-a3ac-e75ecb0b0119
+langcode: hu
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:66b3336d-9a36-4d22-a287-702f769e8d09'
+  module:
+    - block_content
+  theme:
+    - moni2026
+id: moni2026_social
+theme: moni2026
+region: nav_additional
+weight: 0
+provider: null
+plugin: 'block_content:66b3336d-9a36-4d22-a287-702f769e8d09'
+settings:
+  id: 'block_content:66b3336d-9a36-4d22-a287-702f769e8d09'
+  label: social
+  label_display: '0'
+  provider: block_content
+  view_mode: full
+visibility: {  }

@@ -1,0 +1,27 @@
+uuid: 1056dcd6-4c01-4d84-98fe-51dc8f8e0130
+langcode: hu
+status: true
+dependencies:
+  config:
+    - system.menu.footer
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: '-meyeIPrkWJ1IzUNoWFs0d7wmLR2c_tKUKTpwHi88Es'
+id: moni2026_footer
+theme: moni2026
+region: footer
+weight: -6
+provider: null
+plugin: 'system_menu_block:footer'
+settings:
+  id: 'system_menu_block:footer'
+  label: Footer
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

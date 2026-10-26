@@ -1,0 +1,22 @@
+uuid: 674059ac-cc10-4620-be98-f30c6756dee5
+langcode: hu
+status: true
+dependencies:
+  theme:
+    - moni2026
+_core:
+  default_config_hash: ehXNLCT7U_J73Jn5PfojS_Y_bgtjDrEhqfpqpYSraqQ
+id: moni2026_local_tasks
+theme: moni2026
+region: content
+weight: -4
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: Tabs
+  label_display: '0'
+  provider: core
+  primary: true
+  secondary: true
+visibility: {  }

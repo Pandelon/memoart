@@ -1,0 +1,20 @@
+uuid: aa2bc060-8e35-4b71-820b-517a8b67b590
+langcode: hu
+status: true
+dependencies:
+  theme:
+    - moni2026
+_core:
+  default_config_hash: ypdxU2kF18yxtcz1LPddswcXykdEE5THRiLH1RU-CiA
+id: moni2026_page_title
+theme: moni2026
+region: content
+weight: -6
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  label_display: '0'
+  provider: core
+visibility: {  }

@@ -1,0 +1,27 @@
+uuid: 012148a2-9069-4ca6-aff3-fe2acbde7733
+langcode: hu
+status: false
+dependencies:
+  config:
+    - system.menu.account
+  module:
+    - system
+  theme:
+    - moni2026
+_core:
+  default_config_hash: i1ipTH8bLdYIBKbbTB-NU2nz2rvp83n8OO3PnifgIdc
+id: moni2026_account_menu
+theme: moni2026
+region: footer
+weight: -5
+provider: null
+plugin: 'system_menu_block:account'
+settings:
+  id: 'system_menu_block:account'
+  label: 'User account menu'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

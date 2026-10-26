@@ -1,0 +1,23 @@
+favicon:
+  mimetype: image/vnd.microsoft.icon
+  path: 'public://favicon.ico'
+  use_default: false
+features:
+  comment_user_picture: true
+  comment_user_verification: true
+  favicon: true
+  node_user_picture: false
+logo:
+  path: 'public://me-mo-foto-logo_2025.png'
+  use_default: true
+b5_body_schema: none
+b5_body_bg_schema: none
+b5_navbar_schema: none
+b5_navbar_bg_schema: none
+b5_footer_schema: none
+b5_footer_bg_schema: none
+b5_top_container: container
+b5_top_container_config: ''
+subtheme_folder: themes/custom
+subtheme_name: 'B5 subtheme'
+subtheme_machine_name: b5subtheme

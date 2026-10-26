@@ -1,0 +1,23 @@
+uuid: b0dbdd2c-9d99-463f-83c1-501924b7b24a
+langcode: hu
+status: true
+dependencies:
+  content:
+    - 'block_content:basic:d3649591-c10b-4768-8816-bcf8a8f98a72'
+  module:
+    - block_content
+  theme:
+    - moni2026
+id: moni2026_megrendelestelefon
+theme: moni2026
+region: front_first
+weight: 0
+provider: null
+plugin: 'block_content:d3649591-c10b-4768-8816-bcf8a8f98a72'
+settings:
+  id: 'block_content:d3649591-c10b-4768-8816-bcf8a8f98a72'
+  label: Megrendelés/telefon
+  label_display: '0'
+  provider: block_content
+  view_mode: full
+visibility: {  }
