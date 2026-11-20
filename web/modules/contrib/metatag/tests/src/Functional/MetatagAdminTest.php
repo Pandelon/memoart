@@ -109,6 +109,8 @@ class MetatagAdminTest extends BrowserTestBase {
     $this->drupalGet('admin/config/search/metatag/global');
     $session->statusCodeEquals(200);
     $this->assertSession()->fieldExists('edit-title', $metatag_defaults->get('title'));
+    // Check that the tag descriptions are shown.
+    $session->pageTextContains('The text to display in the title bar');
     // Update the Global defaults and test them.
     $this->drupalGet('admin/config/search/metatag/global');
     $session->statusCodeEquals(200);
@@ -561,6 +563,27 @@ class MetatagAdminTest extends BrowserTestBase {
     $session->titleEquals('my wonderful');
     $session->elementAttributeContains('css', 'meta[name=description]', 'content', 'Drupal');
     $session->elementAttributeContains('css', 'meta[name=abstract]', 'content', 'my wonderful');
+  }
+
+  /**
+   * Tests the defaults page in maintenance mode.
+   */
+  public function testDefaultsMaintenanceMode() {
+    $permissions = [
+      'administer site configuration',
+      'administer meta tags',
+      'access site in maintenance mode',
+    ];
+    $account = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($account);
+
+    \Drupal::state()->set('system.maintenance_mode', TRUE);
+
+    $this->drupalGet('admin/config/search/metatag');
+    $session = $this->assertSession();
+    $session->statusCodeEquals(200);
+    $session->pageTextContains('Please note that while the site is in maintenance mode none of the usual meta tags will be output.');
+    $session->linkByHrefExists('admin/config/search/metatag/global');
   }
 
 }

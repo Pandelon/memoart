@@ -7,6 +7,7 @@ use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -46,10 +47,12 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
    *
    * @param \Drupal\views\Plugin\views\cache\CachePluginBase $plugin
    *   The cache plugin being wrapped.
+   * @param \Drupal\Core\Cache\CacheFactoryInterface $cache_factory
+   *   The cache factory, used to load the plugin's results cache bin.
    */
-  public function __construct(CachePluginBase $plugin) {
+  public function __construct(CachePluginBase $plugin, CacheFactoryInterface $cache_factory) {
     $this->plugin = $plugin;
-    $this->cache = $this->container->get('cache.' . $this->plugin->resultsBin);
+    $this->cache = $cache_factory->get($plugin->resultsBin);
   }
 
   /**
@@ -85,7 +88,7 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
         'first_row_tokens' => MetatagDisplayExtender::getFirstRowTokensFromStylePlugin($view),
       ];
       $cache_set_max_age = $this->cacheSetMaxAge('results');
-      $expire = $this->cache($cache_set_max_age === Cache::PERMANENT) ? Cache::PERMANENT : (int) $view->getRequest()->server->get('REQUEST_TIME') + $cache_set_max_age;
+      $expire = $cache_set_max_age === Cache::PERMANENT ? Cache::PERMANENT : (int) $view->getRequest()->server->get('REQUEST_TIME') + $cache_set_max_age;
       $this->cache->set($plugin->generateResultsKey(), $data, $expire, $plugin->getCacheTags());
     }
     else {
@@ -99,7 +102,9 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   public function cacheGet($type) {
     switch ($type) {
       case self::RESULTS:
-        $cutoff = $this->plugin->cacheExpire($type);
+        // Core dropped the results cache cutoff in 11.4.0, see
+        // https://www.drupal.org/node/3576855.
+        $cutoff = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.4.0', fn() => FALSE, fn() => $this->plugin->cacheExpire($type));
         // Values to set: $view->result, $view->total_rows,
         // $view->current_page and pass row tokens to metatag display extender.
         if ($cache = $this->cache->get($this->plugin->generateResultsKey())) {
@@ -112,8 +117,9 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
             $view->setCurrentPage($cache->data['current_page']);
             $extenders = $view->getDisplay()->getExtenders();
             if (isset($extenders['metatag_display_extender'])) {
-              /** @var \Drupal\metatag_views\Plugin\views\display_extender\MetatagDisplayExtender $extenders['metatag_display_extender'] */
-              $extenders['metatag_display_extender']->setFirstRowTokens($cache->data['first_row_tokens']);
+              /** @var \Drupal\metatag_views\Plugin\views\display_extender\MetatagDisplayExtender $extender */
+              $extender = $extenders['metatag_display_extender'];
+              $extender->setFirstRowTokens($cache->data['first_row_tokens']);
             }
             return TRUE;
           }
